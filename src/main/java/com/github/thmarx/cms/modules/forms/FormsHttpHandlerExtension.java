@@ -22,7 +22,7 @@ package com.github.thmarx.cms.modules.forms;
  * #L%
  */
 
-import com.github.thmarx.cms.api.extensions.JettyHttpHandlerExtensionPoint;
+import com.github.thmarx.cms.api.extensions.HttpHandlerExtensionPoint;
 import com.github.thmarx.cms.api.extensions.Mapping;
 import com.github.thmarx.cms.modules.forms.handler.AjaxCaptchaValidationHandler;
 import com.github.thmarx.cms.modules.forms.handler.GenerateCaptchaHandler;
@@ -35,8 +35,8 @@ import org.eclipse.jetty.http.pathmap.PathSpec;
  *
  * @author t.marx
  */
-@Extension(JettyHttpHandlerExtensionPoint.class)
-public class FormsHttpHandlerExtension extends JettyHttpHandlerExtensionPoint {
+@Extension(HttpHandlerExtensionPoint.class)
+public class FormsHttpHandlerExtension extends HttpHandlerExtensionPoint {
 
 	@Override
 	public Mapping getMapping() {
