@@ -26,6 +26,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.thmarx.cms.api.feature.features.DBFeature;
 import com.github.thmarx.cms.api.module.CMSModuleContext;
+import com.github.thmarx.cms.api.module.CMSRequestContext;
 import com.github.thmarx.modules.api.ModuleLifeCycleExtension;
 import com.github.thmarx.modules.api.annotation.Extension;
 import java.io.IOException;
@@ -44,7 +45,7 @@ import org.yaml.snakeyaml.Yaml;
  */
 @Slf4j
 @Extension(ModuleLifeCycleExtension.class)
-public class FormsLifecycleExtension extends ModuleLifeCycleExtension<CMSModuleContext> {
+public class FormsLifecycleExtension extends ModuleLifeCycleExtension<CMSModuleContext, CMSRequestContext> {
 
 	public static Cache<String, String> CAPTCHAS;
 	public static FormsConfig FORMSCONFIG;
