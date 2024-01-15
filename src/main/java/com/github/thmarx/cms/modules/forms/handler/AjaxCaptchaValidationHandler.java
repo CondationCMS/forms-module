@@ -22,23 +22,22 @@ package com.github.thmarx.cms.modules.forms.handler;
  * #L%
  */
 
+import com.github.thmarx.cms.api.extensions.HttpHandler;
 import com.github.thmarx.cms.modules.forms.FormsLifecycleExtension;
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.io.Content;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
-import org.simplejavamail.email.EmailBuilder;
 
 /**
  *
  * @author t.marx
  */
 @Slf4j
-public class AjaxCaptchaValidationHandler extends Handler.Abstract {
+public class AjaxCaptchaValidationHandler implements HttpHandler {
 
 	private static Gson GSON = new Gson();
 	

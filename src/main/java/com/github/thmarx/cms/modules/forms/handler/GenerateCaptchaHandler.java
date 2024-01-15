@@ -22,6 +22,7 @@ package com.github.thmarx.cms.modules.forms.handler;
  * #L%
  */
 
+import com.github.thmarx.cms.api.extensions.HttpHandler;
 import com.github.thmarx.cms.api.utils.HTTPUtil;
 import com.github.thmarx.cms.modules.forms.FormsLifecycleExtension;
 import java.io.ByteArrayOutputStream;
@@ -30,12 +31,9 @@ import java.util.List;
 import java.util.Map;
 import javax.imageio.ImageIO;
 import net.logicsquad.nanocaptcha.image.ImageCaptcha;
-import net.logicsquad.nanocaptcha.image.filter.RippleImageFilter;
-import net.logicsquad.nanocaptcha.image.filter.ShearImageFilter;
 import net.logicsquad.nanocaptcha.image.filter.StretchImageFilter;
 import net.logicsquad.nanocaptcha.image.noise.StraightLineNoiseProducer;
 import org.eclipse.jetty.io.Content;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
@@ -44,7 +42,7 @@ import org.eclipse.jetty.util.Callback;
  *
  * @author t.marx
  */
-public class GenerateCaptchaHandler extends Handler.Abstract {
+public class GenerateCaptchaHandler implements HttpHandler {
 
 	private static int DEFAULT_CAPTCHA_WIDTH = 250;
 	private static int DEFAULT_CAPTCHA_HEIGHT = 250;

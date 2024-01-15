@@ -21,6 +21,7 @@ package com.github.thmarx.cms.modules.forms.handler;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import com.github.thmarx.cms.api.extensions.HttpHandler;
 import com.github.thmarx.cms.modules.forms.FormHandlingException;
 import com.github.thmarx.cms.modules.forms.FormsHandling;
 import com.github.thmarx.cms.modules.forms.FormsLifecycleExtension;
@@ -36,7 +37,6 @@ import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.http.MultiPart;
 import org.eclipse.jetty.http.MultiPartFormData;
 import org.eclipse.jetty.server.FormFields;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
@@ -47,7 +47,7 @@ import org.eclipse.jetty.util.Fields;
  * @author t.marx
  */
 @Slf4j
-public class SubmitFormHandler extends Handler.Abstract {
+public class SubmitFormHandler implements HttpHandler {
 
 	private static Gson GSON = new Gson();
 
