@@ -1,4 +1,4 @@
-package com.github.thmarx.cms.modules.forms;
+package com.condation.cms.modules.forms;
 
 /*-
  * #%L

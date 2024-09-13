@@ -1,4 +1,4 @@
-package com.github.thmarx.cms.modules.forms.handler;
+package com.condation.cms.modules.forms.handler;
 
 /*-
  * #%L
@@ -22,8 +22,8 @@ package com.github.thmarx.cms.modules.forms.handler;
  * #L%
  */
 
-import com.github.thmarx.cms.api.extensions.HttpHandler;
-import com.github.thmarx.cms.modules.forms.FormsLifecycleExtension;
+import com.condation.cms.api.extensions.HttpHandler;
+import com.condation.cms.modules.forms.FormsLifecycleExtension;
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;

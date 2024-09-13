@@ -1,4 +1,4 @@
-package com.github.thmarx.cms.modules.forms.utils;
+package com.condation.cms.modules.forms.template;
 
 /*-
  * #%L
@@ -22,25 +22,23 @@ package com.github.thmarx.cms.modules.forms.utils;
  * #L%
  */
 
-import java.util.Random;
+import com.condation.cms.modules.forms.utils.StringUtil;
 
 /**
  *
  * @author t.marx
  */
-public class StringUtil {
-
-	static Random random = new Random();
-
-	public static String random_string() {
-		int leftLimit = 48; // numeral '0'
-		int rightLimit = 122; // letter 'z'
-		int targetStringLength = 10;
-
-		return random.ints(leftLimit, rightLimit + 1)
-				.filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
-				.limit(targetStringLength)
-				.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-				.toString();
+public class FormsTemplateModel {
+	
+	private Captcha captcha = new Captcha();
+	
+	public Captcha getCaptcha () {
+		return captcha;
+	}
+	
+	public class Captcha {
+		public String generateKey () {
+			return StringUtil.random_string();
+		}
 	}
 }

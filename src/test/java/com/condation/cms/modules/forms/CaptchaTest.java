@@ -1,4 +1,4 @@
-package com.github.thmarx.cms.modules.forms;
+package com.condation.cms.modules.forms;
 
 /*-
  * #%L
@@ -22,21 +22,23 @@ package com.github.thmarx.cms.modules.forms;
  * #L%
  */
 
-import com.github.thmarx.cms.api.extensions.TemplateModelExtendingExtentionPoint;
-import com.github.thmarx.cms.api.template.TemplateEngine;
-import com.github.thmarx.cms.modules.forms.template.FormsTemplateModel;
-import com.github.thmarx.modules.api.annotation.Extension;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import net.logicsquad.nanocaptcha.image.ImageCaptcha;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author t.marx
  */
-@Extension(TemplateModelExtendingExtentionPoint.class)
-public class FormsTemplateModelExtensionPoint extends TemplateModelExtendingExtentionPoint{
-
-	@Override
-	public void extendModel(TemplateEngine.Model model) {
-		model.values.put("forms", new FormsTemplateModel());
+public class CaptchaTest {
+	
+	@Test
+	void test_captcha () throws IOException {
+		ImageCaptcha imageCaptcha = new ImageCaptcha.Builder(200, 50).addContent().build();
+		ImageIO.write(imageCaptcha.getImage(), "png", new File("target/captcha.png"));
+		System.out.println(imageCaptcha.getContent());
+		System.out.println(imageCaptcha.isCorrect(imageCaptcha.getContent()));
 	}
-
 }

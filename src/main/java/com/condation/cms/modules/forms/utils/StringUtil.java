@@ -1,4 +1,4 @@
-package com.github.thmarx.cms.modules.forms;
+package com.condation.cms.modules.forms.utils;
 
 /*-
  * #%L
@@ -22,37 +22,25 @@ package com.github.thmarx.cms.modules.forms;
  * #L%
  */
 
-import java.util.Optional;
+import java.util.Random;
 
 /**
  *
  * @author t.marx
  */
-public class FormHandlingException extends Exception {
+public class StringUtil {
 
-	private FormsConfig.Form form = null;
-	
-	/**
-	 * Creates a new instance of <code>FormHandlingException</code> without detail message.
-	 */
-	public FormHandlingException() {
-	}
+	static Random random = new Random();
 
-	/**
-	 * Constructs an instance of <code>FormHandlingException</code> with the specified detail message.
-	 *
-	 * @param msg the detail message.
-	 */
-	public FormHandlingException(String msg) {
-		super(msg);
-	}
-	
-	public FormHandlingException(String msg, final FormsConfig.Form form) {
-		super(msg);
-		this.form = form;
-	}
-	
-	public Optional<FormsConfig.Form> getForm () {
-		return Optional.ofNullable(form);
+	public static String random_string() {
+		int leftLimit = 48; // numeral '0'
+		int rightLimit = 122; // letter 'z'
+		int targetStringLength = 10;
+
+		return random.ints(leftLimit, rightLimit + 1)
+				.filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+				.limit(targetStringLength)
+				.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+				.toString();
 	}
 }

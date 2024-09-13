@@ -1,4 +1,4 @@
-package com.github.thmarx.cms.modules.forms;
+package com.condation.cms.modules.forms;
 
 /*-
  * #%L
@@ -22,13 +22,13 @@ package com.github.thmarx.cms.modules.forms;
  * #L%
  */
 
-import com.github.thmarx.cms.api.extensions.HttpHandlerExtensionPoint;
-import com.github.thmarx.cms.api.extensions.Mapping;
-import com.github.thmarx.cms.modules.forms.handler.AjaxCaptchaValidationHandler;
-import com.github.thmarx.cms.modules.forms.handler.GenerateCaptchaHandler;
-import com.github.thmarx.cms.modules.forms.handler.AjaxSubmitFormHandler;
-import com.github.thmarx.cms.modules.forms.handler.SubmitFormHandler;
-import com.github.thmarx.modules.api.annotation.Extension;
+import com.condation.cms.api.extensions.HttpHandlerExtensionPoint;
+import com.condation.cms.api.extensions.Mapping;
+import com.condation.cms.modules.forms.handler.AjaxCaptchaValidationHandler;
+import com.condation.cms.modules.forms.handler.GenerateCaptchaHandler;
+import com.condation.cms.modules.forms.handler.AjaxSubmitFormHandler;
+import com.condation.cms.modules.forms.handler.SubmitFormHandler;
+import com.condation.modules.api.annotation.Extension;
 import org.eclipse.jetty.http.pathmap.PathSpec;
 
 /**

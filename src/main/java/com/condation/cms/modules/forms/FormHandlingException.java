@@ -1,4 +1,4 @@
-package com.github.thmarx.cms.modules.forms.template;
+package com.condation.cms.modules.forms;
 
 /*-
  * #%L
@@ -22,23 +22,37 @@ package com.github.thmarx.cms.modules.forms.template;
  * #L%
  */
 
-import com.github.thmarx.cms.modules.forms.utils.StringUtil;
+import java.util.Optional;
 
 /**
  *
  * @author t.marx
  */
-public class FormsTemplateModel {
+public class FormHandlingException extends Exception {
+
+	private FormsConfig.Form form = null;
 	
-	private Captcha captcha = new Captcha();
-	
-	public Captcha getCaptcha () {
-		return captcha;
+	/**
+	 * Creates a new instance of <code>FormHandlingException</code> without detail message.
+	 */
+	public FormHandlingException() {
+	}
+
+	/**
+	 * Constructs an instance of <code>FormHandlingException</code> with the specified detail message.
+	 *
+	 * @param msg the detail message.
+	 */
+	public FormHandlingException(String msg) {
+		super(msg);
 	}
 	
-	public class Captcha {
-		public String generateKey () {
-			return StringUtil.random_string();
-		}
+	public FormHandlingException(String msg, final FormsConfig.Form form) {
+		super(msg);
+		this.form = form;
+	}
+	
+	public Optional<FormsConfig.Form> getForm () {
+		return Optional.ofNullable(form);
 	}
 }
