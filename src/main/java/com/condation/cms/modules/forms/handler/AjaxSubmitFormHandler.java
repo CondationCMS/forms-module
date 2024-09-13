@@ -4,7 +4,7 @@ package com.condation.cms.modules.forms.handler;
  * #%L
  * forms-module
  * %%
- * Copyright (C) 2023 Marx-Software
+ * Copyright (C) 2024 CondationCMS
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -21,6 +21,7 @@ package com.condation.cms.modules.forms.handler;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+
 
 import com.condation.cms.api.extensions.HttpHandler;
 import com.condation.cms.modules.forms.FormsLifecycleExtension;
