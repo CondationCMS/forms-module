@@ -1,10 +1,10 @@
-package com.github.thmarx.cms.modules.forms.handler;
+package com.condation.cms.modules.forms.handler;
 
 /*-
  * #%L
  * forms-module
  * %%
- * Copyright (C) 2023 Marx-Software
+ * Copyright (C) 2024 CondationCMS
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,8 +22,9 @@ package com.github.thmarx.cms.modules.forms.handler;
  * #L%
  */
 
-import com.github.thmarx.cms.api.extensions.HttpHandler;
-import com.github.thmarx.cms.modules.forms.FormsLifecycleExtension;
+
+import com.condation.cms.api.extensions.HttpHandler;
+import com.condation.cms.modules.forms.FormsLifecycleExtension;
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
@@ -31,14 +32,13 @@ import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
-import org.simplejavamail.email.EmailBuilder;
 
 /**
  *
  * @author t.marx
  */
 @Slf4j
-public class AjaxSubmitFormHandler implements HttpHandler {
+public class AjaxCaptchaValidationHandler implements HttpHandler {
 
 	private static Gson GSON = new Gson();
 	
@@ -54,20 +54,13 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 		String body = readBody(request);
 		var formData = GSON.fromJson(body, FormsData.class);
 		
-		String content = "false";
+		boolean valid = false;
 		String captchaCode = FormsLifecycleExtension.CAPTCHAS.getIfPresent(formData.key());
 		if (captchaCode != null && captchaCode.equals(formData.code())) {
-			content = "true";
-			var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formData.form()).get();
-			FormsLifecycleExtension.MAILER.sendMail(EmailBuilder.startingBlank()
-				.to(form.getTo())
-				.from(formData.from())
-				.appendText(formData.body())
-				.withSubject(form.getSubject())
-				.buildEmail());
+			valid = true;
 		}
 
-		Content.Sink.write(response, true, content, callback);
+		Content.Sink.write(response, true, GSON.toJson(new ValidationResponse(valid)), callback);
 
 		return true;
 	}
@@ -81,7 +74,6 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 		return "";
 	}
 
-	public record FormsData(String form, String body, String from, String code, String key) {
-
-	}
+	public record FormsData(String code, String key) {}
+	public record ValidationResponse (boolean valid) {}
 }

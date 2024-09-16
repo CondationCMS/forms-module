@@ -1,10 +1,10 @@
-package com.github.thmarx.cms.modules.forms;
+package com.condation.cms.modules.forms;
 
 /*-
  * #%L
  * forms-module
  * %%
- * Copyright (C) 2023 Marx-Software
+ * Copyright (C) 2024 CondationCMS
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,13 +22,14 @@ package com.github.thmarx.cms.modules.forms;
  * #L%
  */
 
+
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.thmarx.cms.api.feature.features.DBFeature;
-import com.github.thmarx.cms.api.module.CMSModuleContext;
-import com.github.thmarx.cms.api.module.CMSRequestContext;
-import com.github.thmarx.modules.api.ModuleLifeCycleExtension;
-import com.github.thmarx.modules.api.annotation.Extension;
+import com.condation.cms.api.feature.features.DBFeature;
+import com.condation.cms.api.module.CMSModuleContext;
+import com.condation.cms.api.module.CMSRequestContext;
+import com.condation.modules.api.ModuleLifeCycleExtension;
+import com.condation.modules.api.annotation.Extension;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

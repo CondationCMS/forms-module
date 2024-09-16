@@ -1,10 +1,10 @@
-package com.github.thmarx.cms.modules.forms.handler;
+package com.condation.cms.modules.forms.handler;
 
 /*-
  * #%L
  * forms-module
  * %%
- * Copyright (C) 2023 Marx-Software
+ * Copyright (C) 2024 CondationCMS
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,9 +22,10 @@ package com.github.thmarx.cms.modules.forms.handler;
  * #L%
  */
 
-import com.github.thmarx.cms.api.extensions.HttpHandler;
-import com.github.thmarx.cms.api.utils.HTTPUtil;
-import com.github.thmarx.cms.modules.forms.FormsLifecycleExtension;
+
+import com.condation.cms.api.extensions.HttpHandler;
+import com.condation.cms.api.utils.HTTPUtil;
+import com.condation.cms.modules.forms.FormsLifecycleExtension;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.List;

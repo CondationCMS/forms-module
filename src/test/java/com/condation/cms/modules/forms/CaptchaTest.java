@@ -1,10 +1,10 @@
-package com.github.thmarx.cms.modules.forms;
+package com.condation.cms.modules.forms;
 
 /*-
  * #%L
  * forms-module
  * %%
- * Copyright (C) 2023 Marx-Software
+ * Copyright (C) 2024 CondationCMS
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,37 +22,24 @@ package com.github.thmarx.cms.modules.forms;
  * #L%
  */
 
-import java.util.Optional;
+
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import net.logicsquad.nanocaptcha.image.ImageCaptcha;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author t.marx
  */
-public class FormHandlingException extends Exception {
-
-	private FormsConfig.Form form = null;
+public class CaptchaTest {
 	
-	/**
-	 * Creates a new instance of <code>FormHandlingException</code> without detail message.
-	 */
-	public FormHandlingException() {
-	}
-
-	/**
-	 * Constructs an instance of <code>FormHandlingException</code> with the specified detail message.
-	 *
-	 * @param msg the detail message.
-	 */
-	public FormHandlingException(String msg) {
-		super(msg);
-	}
-	
-	public FormHandlingException(String msg, final FormsConfig.Form form) {
-		super(msg);
-		this.form = form;
-	}
-	
-	public Optional<FormsConfig.Form> getForm () {
-		return Optional.ofNullable(form);
+	@Test
+	void test_captcha () throws IOException {
+		ImageCaptcha imageCaptcha = new ImageCaptcha.Builder(200, 50).addContent().build();
+		ImageIO.write(imageCaptcha.getImage(), "png", new File("target/captcha.png"));
+		System.out.println(imageCaptcha.getContent());
+		System.out.println(imageCaptcha.isCorrect(imageCaptcha.getContent()));
 	}
 }

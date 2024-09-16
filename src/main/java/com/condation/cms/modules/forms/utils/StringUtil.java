@@ -1,10 +1,10 @@
-package com.github.thmarx.cms.modules.forms.template;
+package com.condation.cms.modules.forms.utils;
 
 /*-
  * #%L
  * forms-module
  * %%
- * Copyright (C) 2023 Marx-Software
+ * Copyright (C) 2024 CondationCMS
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,23 +22,26 @@ package com.github.thmarx.cms.modules.forms.template;
  * #L%
  */
 
-import com.github.thmarx.cms.modules.forms.utils.StringUtil;
+
+import java.util.Random;
 
 /**
  *
  * @author t.marx
  */
-public class FormsTemplateModel {
-	
-	private Captcha captcha = new Captcha();
-	
-	public Captcha getCaptcha () {
-		return captcha;
-	}
-	
-	public class Captcha {
-		public String generateKey () {
-			return StringUtil.random_string();
-		}
+public class StringUtil {
+
+	static Random random = new Random();
+
+	public static String random_string() {
+		int leftLimit = 48; // numeral '0'
+		int rightLimit = 122; // letter 'z'
+		int targetStringLength = 10;
+
+		return random.ints(leftLimit, rightLimit + 1)
+				.filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+				.limit(targetStringLength)
+				.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+				.toString();
 	}
 }

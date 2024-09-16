@@ -1,10 +1,10 @@
-package com.github.thmarx.cms.modules.forms;
+package com.condation.cms.modules.forms;
 
 /*-
  * #%L
  * forms-module
  * %%
- * Copyright (C) 2023 Marx-Software
+ * Copyright (C) 2024 CondationCMS
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -22,21 +22,38 @@ package com.github.thmarx.cms.modules.forms;
  * #L%
  */
 
-import com.github.thmarx.cms.api.extensions.TemplateModelExtendingExtentionPoint;
-import com.github.thmarx.cms.api.template.TemplateEngine;
-import com.github.thmarx.cms.modules.forms.template.FormsTemplateModel;
-import com.github.thmarx.modules.api.annotation.Extension;
+
+import java.util.Optional;
 
 /**
  *
  * @author t.marx
  */
-@Extension(TemplateModelExtendingExtentionPoint.class)
-public class FormsTemplateModelExtensionPoint extends TemplateModelExtendingExtentionPoint{
+public class FormHandlingException extends Exception {
 
-	@Override
-	public void extendModel(TemplateEngine.Model model) {
-		model.values.put("forms", new FormsTemplateModel());
+	private FormsConfig.Form form = null;
+	
+	/**
+	 * Creates a new instance of <code>FormHandlingException</code> without detail message.
+	 */
+	public FormHandlingException() {
 	}
 
+	/**
+	 * Constructs an instance of <code>FormHandlingException</code> with the specified detail message.
+	 *
+	 * @param msg the detail message.
+	 */
+	public FormHandlingException(String msg) {
+		super(msg);
+	}
+	
+	public FormHandlingException(String msg, final FormsConfig.Form form) {
+		super(msg);
+		this.form = form;
+	}
+	
+	public Optional<FormsConfig.Form> getForm () {
+		return Optional.ofNullable(form);
+	}
 }
