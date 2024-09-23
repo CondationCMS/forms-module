@@ -6,18 +6,13 @@ mail:
     password: password
 forms:
   - name: contact
-    action: mail
-    actionParameters: 
-        to: contact@example.com
-        subject: Ich suche Kontakt!
-        fields: [message]
+    to: contact@example.com
+    subject: Ich suche Kontakt!
+    fields: [message]
     redirects:
       success: /forms/contact/success
 forms:
   - name: test-form
-    action: hook
-    actionParameters: 
-        hook: forms/test-form/submit
     redirects:
       success: /forms/contact/success
 redirects:
