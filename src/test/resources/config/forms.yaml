@@ -1,0 +1,24 @@
+mail:
+  smtp:
+    hostname: 127.0.0.1
+    port: 3025
+    username: test@example.test
+    password: password
+forms:
+  - name: contact
+    action: mail
+    actionParameters: 
+        to: contact@example.com
+        subject: Ich suche Kontakt!
+        fields: [message]
+    redirects:
+      success: /forms/contact/success
+forms:
+  - name: test-form
+    action: hook
+    actionParameters: 
+        hook: forms/test-form/submit
+    redirects:
+      success: /forms/contact/success
+redirects:
+  error: /forms/error

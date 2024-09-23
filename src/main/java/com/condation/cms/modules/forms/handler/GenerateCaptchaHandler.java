@@ -45,8 +45,8 @@ import org.eclipse.jetty.util.Callback;
  */
 public class GenerateCaptchaHandler implements HttpHandler {
 
-	private static int DEFAULT_CAPTCHA_WIDTH = 250;
-	private static int DEFAULT_CAPTCHA_HEIGHT = 250;
+	private static final int DEFAULT_CAPTCHA_WIDTH = 250;
+	private static final int DEFAULT_CAPTCHA_HEIGHT = 250;
 	
 	@Override
 	public boolean handle(Request request, Response response, Callback callback) throws Exception {

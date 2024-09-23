@@ -23,6 +23,7 @@ package com.condation.cms.modules.forms.handler;
  */
 
 import com.condation.cms.api.extensions.HttpHandler;
+import com.condation.cms.api.hooks.HookSystem;
 import com.condation.cms.modules.forms.FormHandlingException;
 import com.condation.cms.modules.forms.FormsHandling;
 import com.condation.cms.modules.forms.FormsLifecycleExtension;
@@ -31,6 +32,7 @@ import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.concurrent.CompletableFuture;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
@@ -48,10 +50,13 @@ import org.eclipse.jetty.util.Fields;
  * @author t.marx
  */
 @Slf4j
+@RequiredArgsConstructor
 public class SubmitFormHandler implements HttpHandler {
 
 	private static Gson GSON = new Gson();
 
+	private final HookSystem hookSystem;
+	
 	@Override
 	public boolean handle(Request request, Response response, Callback callback) throws Exception {
 
@@ -62,7 +67,7 @@ public class SubmitFormHandler implements HttpHandler {
 
 		String contentType = request.getHeaders().get(HttpHeader.CONTENT_TYPE);
 
-		FormsHandling formHandling = new FormsHandling();
+		FormsHandling formHandling = new FormsHandling(hookSystem);
 
 		if (MimeTypes.Type.FORM_ENCODED.is(contentType)) {
 			CompletableFuture<Fields> completableFields = FormFields.from(request, StandardCharsets.UTF_8);
