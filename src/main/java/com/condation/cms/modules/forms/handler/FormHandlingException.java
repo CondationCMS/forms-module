@@ -1,4 +1,4 @@
-package com.condation.cms.modules.forms;
+package com.condation.cms.modules.forms.handler;
 
 /*-
  * #%L
@@ -23,6 +23,7 @@ package com.condation.cms.modules.forms;
  */
 
 
+import com.condation.cms.modules.forms.FormsConfig;
 import java.util.Optional;
 
 /**

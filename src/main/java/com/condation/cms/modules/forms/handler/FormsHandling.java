@@ -1,4 +1,4 @@
-package com.condation.cms.modules.forms;
+package com.condation.cms.modules.forms.handler;
 
 /*-
  * #%L
@@ -24,6 +24,8 @@ package com.condation.cms.modules.forms;
 
 
 import com.condation.cms.api.hooks.HookSystem;
+import com.condation.cms.modules.forms.FormsConfig;
+import com.condation.cms.modules.forms.FormsLifecycleExtension;
 import com.condation.cms.modules.forms.utils.StringUtil;
 import java.util.HashMap;
 import java.util.Map;
