@@ -44,4 +44,8 @@ public class StringUtil {
 				.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
 				.toString();
 	}
+	
+	public static boolean isNullOrEmpty (String value) {
+		return value == null || value.isBlank();
+	}
 }

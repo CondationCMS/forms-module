@@ -24,7 +24,7 @@ package com.condation.cms.modules.forms;
 
 
 import com.condation.cms.api.hooks.HookSystem;
-import com.google.common.base.Strings;
+import com.condation.cms.modules.forms.utils.StringUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -72,7 +72,11 @@ public class FormsHandling {
 				data.put(field, value);
 			});
 		}
-
+		
+		if (form.getData() != null) {
+			data.putAll(form.getData());
+		}
+		
 		return data;
 	}
 	
@@ -86,9 +90,11 @@ public class FormsHandling {
 
 			var data = hookData(form, parameters);
 			data.put("form", form.getName());
-			hookSystem.execute("forms/%s/submit", data);
+			hookSystem.execute(
+					"forms/%s/submit".formatted(form.getName()), 
+					data);
 			
-			if (Strings.isNullOrEmpty(form.getTo())) {
+			if (StringUtil.isNullOrEmpty(form.getTo())) {
 				return;
 			}
 			FormsLifecycleExtension.MAILER.sendMail(EmailBuilder.startingBlank()

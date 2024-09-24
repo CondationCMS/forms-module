@@ -24,9 +24,12 @@ package com.condation.cms.modules.forms.handler;
 
 
 import com.condation.cms.api.extensions.HttpHandler;
+import com.condation.cms.api.hooks.HookSystem;
+import com.condation.cms.modules.forms.FormsHandling;
 import com.condation.cms.modules.forms.FormsLifecycleExtension;
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Request;
@@ -39,9 +42,12 @@ import org.simplejavamail.email.EmailBuilder;
  * @author t.marx
  */
 @Slf4j
+@RequiredArgsConstructor
 public class AjaxSubmitFormHandler implements HttpHandler {
 
-	private static Gson GSON = new Gson();
+	private final static Gson GSON = new Gson();
+	
+	private final HookSystem hooksSystem;
 	
 	@Override
 	public boolean handle(Request request, Response response, Callback callback) throws Exception {
@@ -55,11 +61,14 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 		String body = readBody(request);
 		var formData = GSON.fromJson(body, FormsData.class);
 		
+		var formHandling = new FormsHandling(hooksSystem);
+		
 		String content = "false";
 		String captchaCode = FormsLifecycleExtension.CAPTCHAS.getIfPresent(formData.key());
 		if (captchaCode != null && captchaCode.equals(formData.code())) {
 			content = "true";
 			var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formData.form()).get();
+			
 			FormsLifecycleExtension.MAILER.sendMail(EmailBuilder.startingBlank()
 				.to(form.getTo())
 				.from(formData.from())

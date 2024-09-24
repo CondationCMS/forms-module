@@ -1,1 +1,11 @@
 target/
+demo/lib
+demo/logs
+demo/modules
+demo/hosts/demo/modules_data
+demo/cms.pid
+demo/*.jar
+demo/LICENSE
+demo/log4j2.xml
+demo/README.md
+demo/server.yaml

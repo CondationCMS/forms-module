@@ -31,7 +31,7 @@ import com.condation.cms.modules.forms.utils.StringUtil;
  */
 public class FormsTemplateModel {
 	
-	private Captcha captcha = new Captcha();
+	private final Captcha captcha = new Captcha();
 	
 	public Captcha getCaptcha () {
 		return captcha;
