@@ -26,7 +26,6 @@ package com.condation.cms.modules.forms.handler;
 import com.condation.cms.api.extensions.HttpHandler;
 import com.condation.cms.api.hooks.HookSystem;
 import com.condation.cms.modules.forms.FormsLifecycleExtension;
-import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -45,7 +44,6 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.Fields;
-import org.simplejavamail.email.EmailBuilder;
 
 /**
  *
