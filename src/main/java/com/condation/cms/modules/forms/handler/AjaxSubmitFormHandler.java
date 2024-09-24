@@ -26,14 +26,25 @@ package com.condation.cms.modules.forms.handler;
 import com.condation.cms.api.extensions.HttpHandler;
 import com.condation.cms.api.hooks.HookSystem;
 import com.condation.cms.modules.forms.FormsLifecycleExtension;
+import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.http.MimeTypes;
+import org.eclipse.jetty.http.MultiPart;
+import org.eclipse.jetty.http.MultiPartFormData;
 import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.server.FormFields;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.util.Fields;
 import org.simplejavamail.email.EmailBuilder;
 
 /**
@@ -46,51 +57,83 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 
 	private final static Gson GSON = new Gson();
 	
-	private final HookSystem hooksSystem;
+	private final HookSystem hookSystem;
 	
 	@Override
 	public boolean handle(Request request, Response response, Callback callback) throws Exception {
 
-		if (!"POST".equalsIgnoreCase(request.getMethod())) {
-			response.setStatus(405);
-			callback.succeeded();
-			return true;
-		}
+		String contentType = request.getHeaders().get(HttpHeader.CONTENT_TYPE);
+
+		FormsHandling formHandling = new FormsHandling(hookSystem);
 		
-		String body = readBody(request);
-		var formData = GSON.fromJson(body, FormsData.class);
-		
-		var formHandling = new FormsHandling(hooksSystem);
-		
-		String content = "false";
-		String captchaCode = FormsLifecycleExtension.CAPTCHAS.getIfPresent(formData.key());
-		if (captchaCode != null && captchaCode.equals(formData.code())) {
-			content = "true";
-			var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formData.form()).get();
-			
-			FormsLifecycleExtension.MAILER.sendMail(EmailBuilder.startingBlank()
-				.to(form.getTo())
-				.from(formData.from())
-				.appendText(formData.body())
-				.withSubject(form.getSubject())
-				.buildEmail());
+		final AtomicReference<FormResponse> formResponse = new AtomicReference<>();
+		try {
+			if (MimeTypes.Type.FORM_ENCODED.is(contentType)) {
+				CompletableFuture<Fields> completableFields = FormFields.from(request, StandardCharsets.UTF_8);
+				completableFields.whenComplete((fields, failure) -> {
+					try {
+						if (failure == null) {
+							final String formName = fields.get("form").getValue();
+							var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
+							formHandling.handleForm(form, (field) -> {
+								if (fields.get(field) != null) {
+									return fields.get(field).getValue();
+								}
+								return field;
+							});
+							formResponse.set(new FormResponse(false));
+							callback.succeeded();
+						} else {
+							formResponse.set(new FormResponse(true));
+						}
+					} catch (FormHandlingException fhe) {
+						log.error(null, fhe);
+						formResponse.set(new FormResponse(true));
+					}
+				});
+			} else if (contentType.startsWith(MimeTypes.Type.MULTIPART_FORM_DATA.asString())) {
+				String boundary = MultiPart.extractBoundary(contentType);
+				MultiPartFormData.Parser parser = new MultiPartFormData.Parser(boundary);
+				parser.setFilesDirectory(Files.createTempDirectory("cms-upload"));
+				CompletableFuture<MultiPartFormData.Parts> completableParts = parser.parse(request);
+
+				completableParts.whenComplete((parts, failure)
+						-> {
+					try {
+						if (failure == null) {
+
+							String formName = parts.getFirst("form").getContentAsString(StandardCharsets.UTF_8);
+							var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
+							formHandling.handleForm(form, (field) -> {
+								if (parts.getAll(field) != null && !parts.getAll(field).isEmpty()) {
+									return parts.getAll(field).getFirst().getContentAsString(StandardCharsets.UTF_8);
+								}
+								return field;
+							});
+
+							formResponse.set(new FormResponse(false));
+						} else {
+							formResponse.set(new FormResponse(true));
+						}
+					} catch (FormHandlingException fhe) {
+						log.error(null, fhe);
+						formResponse.set(new FormResponse(true));
+					}
+				});
+			}
+		} catch (Exception e) {
+			log.error("error processing form", e);
 		}
 
-		Content.Sink.write(response, true, content, callback);
-
+		if (formResponse.get().error()) {
+			response.setStatus(HttpStatus.BAD_REQUEST_400);
+		} else {
+			response.setStatus(HttpStatus.OK_200);
+		}
+		Content.Sink.write(response, true, GSON.toJson(formResponse.get()), callback);
+		
 		return true;
 	}
-
-	private String readBody(final Request request) {
-		try (var inputStream = Request.asInputStream(request)) {
-			return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-		} catch (Exception ex) {
-			log.error("", ex);
-		}
-		return "";
-	}
-
-	public record FormsData(String form, String body, String from, String code, String key) {
-
-	}
+	
+	private static record FormResponse (boolean error){};
 }
