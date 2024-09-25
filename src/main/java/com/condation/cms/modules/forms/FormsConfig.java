@@ -24,6 +24,7 @@ package com.condation.cms.modules.forms;
 
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.Data;
 
@@ -47,10 +48,11 @@ public class FormsConfig {
 	@Data
 	public static class Form {
 		private String name;
-		private String to;
-		private String subject;
 		private Redirects redirects;
 		private List<String> fields;
+		private String to;
+		private String subject;
+		private Map<String, Object> data;
 	}
 	
 	@Data

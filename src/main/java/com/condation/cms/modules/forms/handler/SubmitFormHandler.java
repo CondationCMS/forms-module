@@ -21,16 +21,15 @@ package com.condation.cms.modules.forms.handler;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-
 import com.condation.cms.api.extensions.HttpHandler;
-import com.condation.cms.modules.forms.FormHandlingException;
-import com.condation.cms.modules.forms.FormsHandling;
+import com.condation.cms.api.hooks.HookSystem;
 import com.condation.cms.modules.forms.FormsLifecycleExtension;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.concurrent.CompletableFuture;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
@@ -48,9 +47,12 @@ import org.eclipse.jetty.util.Fields;
  * @author t.marx
  */
 @Slf4j
+@RequiredArgsConstructor
 public class SubmitFormHandler implements HttpHandler {
 
 	private static Gson GSON = new Gson();
+
+	private final HookSystem hookSystem;
 
 	@Override
 	public boolean handle(Request request, Response response, Callback callback) throws Exception {
@@ -62,82 +64,86 @@ public class SubmitFormHandler implements HttpHandler {
 
 		String contentType = request.getHeaders().get(HttpHeader.CONTENT_TYPE);
 
-		FormsHandling formHandling = new FormsHandling();
+		FormsHandling formHandling = new FormsHandling(hookSystem);
 
-		if (MimeTypes.Type.FORM_ENCODED.is(contentType)) {
-			CompletableFuture<Fields> completableFields = FormFields.from(request, StandardCharsets.UTF_8);
-			completableFields.whenComplete((fields, failure) -> {
-				try {
-					if (failure == null) {
-						final String formName = fields.get("form").getValue();
-						var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
-						formHandling.handleForm(form, (field) -> {
-							if (fields.get(field) != null) {
-								return fields.get(field).getValue();
-							}
-							return field;
-						});
-						response.getHeaders().add("Location", form.getRedirects().getSuccess());
-						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-						callback.succeeded();
-					} else {
-						response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+		try {
+			if (MimeTypes.Type.FORM_ENCODED.is(contentType)) {
+				CompletableFuture<Fields> completableFields = FormFields.from(request, StandardCharsets.UTF_8);
+				completableFields.whenComplete((fields, failure) -> {
+					try {
+						if (failure == null) {
+							final String formName = fields.get("form").getValue();
+							var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
+							formHandling.handleForm(form, (field) -> {
+								if (fields.get(field) != null) {
+									return fields.get(field).getValue();
+								}
+								return field;
+							});
+							response.getHeaders().add("Location", form.getRedirects().getSuccess());
+							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+							callback.succeeded();
+						} else {
+							response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
+							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+						}
+					} catch (FormHandlingException fhe) {
+						log.error(null, fhe);
+						var formOpt = fhe.getForm();
+						if (formOpt.isPresent() && !Strings.isNullOrEmpty(formOpt.get().getRedirects().getError())) {
+							response.getHeaders().add("Location", formOpt.get().getRedirects().getError());
+							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+						} else {
+							response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
+							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+						}
 					}
-				} catch (FormHandlingException fhe) {
-					log.error(null, fhe);
-					var formOpt = fhe.getForm();
-					if (formOpt.isPresent() && !Strings.isNullOrEmpty(formOpt.get().getRedirects().getError())) {
-						response.getHeaders().add("Location", formOpt.get().getRedirects().getError());
-						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-					} else {
-						response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-					}
-				}
-				callback.succeeded();
-			});
-			return true;
-		} else if (contentType.startsWith(MimeTypes.Type.MULTIPART_FORM_DATA.asString())) {
-			String boundary = MultiPart.extractBoundary(contentType);
-			MultiPartFormData.Parser parser = new MultiPartFormData.Parser(boundary);
-			parser.setFilesDirectory(Files.createTempDirectory("cms-upload"));
-			CompletableFuture<MultiPartFormData.Parts> completableParts = parser.parse(request);
+					callback.succeeded();
+				});
+				return true;
+			} else if (contentType.startsWith(MimeTypes.Type.MULTIPART_FORM_DATA.asString())) {
+				String boundary = MultiPart.extractBoundary(contentType);
+				MultiPartFormData.Parser parser = new MultiPartFormData.Parser(boundary);
+				parser.setFilesDirectory(Files.createTempDirectory("cms-upload"));
+				CompletableFuture<MultiPartFormData.Parts> completableParts = parser.parse(request);
 
-			completableParts.whenComplete((parts, failure)
-					-> {
-				try {
-					if (failure == null) {
+				completableParts.whenComplete((parts, failure)
+						-> {
+					try {
+						if (failure == null) {
 
-						String formName = parts.getFirst("form").getContentAsString(StandardCharsets.UTF_8);
-						var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
-						formHandling.handleForm(form, (field) -> {
-							if (parts.getAll(field) != null && !parts.getAll(field).isEmpty()) {
-								return parts.getAll(field).getFirst().getContentAsString(StandardCharsets.UTF_8);
-							}
-							return field;
-						});
+							String formName = parts.getFirst("form").getContentAsString(StandardCharsets.UTF_8);
+							var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
+							formHandling.handleForm(form, (field) -> {
+								if (parts.getAll(field) != null && !parts.getAll(field).isEmpty()) {
+									return parts.getAll(field).getFirst().getContentAsString(StandardCharsets.UTF_8);
+								}
+								return field;
+							});
 
-						response.getHeaders().add("Location", form.getRedirects().getSuccess());
-						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-					} else {
-						response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+							response.getHeaders().add("Location", form.getRedirects().getSuccess());
+							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+						} else {
+							response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
+							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+						}
+					} catch (FormHandlingException fhe) {
+						log.error(null, fhe);
+						var formOpt = fhe.getForm();
+						if (formOpt.isPresent() && !Strings.isNullOrEmpty(formOpt.get().getRedirects().getError())) {
+							response.getHeaders().add("Location", formOpt.get().getRedirects().getError());
+							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+						} else {
+							response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
+							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+						}
 					}
-				} catch (FormHandlingException fhe) {
-					log.error(null, fhe);
-					var formOpt = fhe.getForm();
-					if (formOpt.isPresent() && !Strings.isNullOrEmpty(formOpt.get().getRedirects().getError())) {
-						response.getHeaders().add("Location", formOpt.get().getRedirects().getError());
-						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-					} else {
-						response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-					}
-				}
-				callback.succeeded();
-			});
-			return true;
+					callback.succeeded();
+				});
+				return true;
+			}
+		} catch (Exception e) {
+			log.error("error processing form", e);
 		}
 
 		response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());

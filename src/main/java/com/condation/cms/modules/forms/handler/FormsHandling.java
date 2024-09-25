@@ -1,4 +1,4 @@
-package com.condation.cms.modules.forms;
+package com.condation.cms.modules.forms.handler;
 
 /*-
  * #%L
@@ -23,7 +23,14 @@ package com.condation.cms.modules.forms;
  */
 
 
+import com.condation.cms.api.hooks.HookSystem;
+import com.condation.cms.modules.forms.FormsConfig;
+import com.condation.cms.modules.forms.FormsLifecycleExtension;
+import com.condation.cms.modules.forms.utils.StringUtil;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.simplejavamail.email.EmailBuilder;
 
@@ -31,9 +38,12 @@ import org.simplejavamail.email.EmailBuilder;
  *
  * @author t.marx
  */
+@RequiredArgsConstructor
 @Slf4j
 public class FormsHandling {
 
+	private final HookSystem hookSystem;
+	
 	private void validateCaptcha(final FormsConfig.Form form, final String key, final String code) throws FormHandlingException {
 		String captchaCode = FormsLifecycleExtension.CAPTCHAS.getIfPresent(key);
 		if (captchaCode == null || !captchaCode.equals(code)) {
@@ -55,6 +65,23 @@ public class FormsHandling {
 		return message.toString();
 	}
 
+	private Map<String, Object> hookData (final FormsConfig.Form form, final Function<String, String> parameters) {
+		Map<String, Object> data = new HashMap<>();
+
+		if (form.getFields() != null) {
+			form.getFields().forEach(field -> {
+				var value = parameters.apply(field);
+				data.put(field, value);
+			});
+		}
+		
+		if (form.getData() != null) {
+			data.putAll(form.getData());
+		}
+		
+		return data;
+	}
+	
 	public void handleForm(final FormsConfig.Form form, final Function<String, String> parameters) throws FormHandlingException {
 		try {
 			final String key = parameters.apply("key");
@@ -63,6 +90,15 @@ public class FormsHandling {
 			validateCaptcha(form, key, captchaCode);
 			FormsLifecycleExtension.CAPTCHAS.invalidate(key);
 
+			var data = hookData(form, parameters);
+			data.put("form", form.getName());
+			hookSystem.execute(
+					"forms/%s/submit".formatted(form.getName()), 
+					data);
+			
+			if (StringUtil.isNullOrEmpty(form.getTo())) {
+				return;
+			}
 			FormsLifecycleExtension.MAILER.sendMail(EmailBuilder.startingBlank()
 					.to(form.getTo())
 					.from(parameters.apply("from"))

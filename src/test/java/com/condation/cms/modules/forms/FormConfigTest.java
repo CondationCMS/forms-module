@@ -22,38 +22,25 @@ package com.condation.cms.modules.forms;
  * #L%
  */
 
-
-import java.util.Optional;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  *
  * @author t.marx
  */
-public class FormHandlingException extends Exception {
-
-	private FormsConfig.Form form = null;
+public class FormConfigTest {
 	
-	/**
-	 * Creates a new instance of <code>FormHandlingException</code> without detail message.
-	 */
-	public FormHandlingException() {
-	}
-
-	/**
-	 * Constructs an instance of <code>FormHandlingException</code> with the specified detail message.
-	 *
-	 * @param msg the detail message.
-	 */
-	public FormHandlingException(String msg) {
-		super(msg);
-	}
-	
-	public FormHandlingException(String msg, final FormsConfig.Form form) {
-		super(msg);
-		this.form = form;
-	}
-	
-	public Optional<FormsConfig.Form> getForm () {
-		return Optional.ofNullable(form);
+	@Test
+	void test_config () throws Exception {
+		var FORMSCONFIG = new Yaml().loadAs(
+				Files.readString(Path.of("src/test/resources/config/forms.yaml"), StandardCharsets.UTF_8), FormsConfig.class);
+		
+		Assertions.assertThat(FORMSCONFIG.findForm("contact")).isPresent();
+		Assertions.assertThat(FORMSCONFIG.findForm("test-form")).isPresent();
 	}
 }

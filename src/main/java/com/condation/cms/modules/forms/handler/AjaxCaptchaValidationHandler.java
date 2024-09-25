@@ -40,7 +40,7 @@ import org.eclipse.jetty.util.Callback;
 @Slf4j
 public class AjaxCaptchaValidationHandler implements HttpHandler {
 
-	private static Gson GSON = new Gson();
+	private static final Gson GSON = new Gson();
 	
 	@Override
 	public boolean handle(Request request, Response response, Callback callback) throws Exception {

@@ -1,4 +1,4 @@
-package com.condation.cms.modules.forms.utils;
+package com.condation.cms.modules.forms.handler;
 
 /*-
  * #%L
@@ -23,29 +23,38 @@ package com.condation.cms.modules.forms.utils;
  */
 
 
-import java.util.Random;
+import com.condation.cms.modules.forms.FormsConfig;
+import java.util.Optional;
 
 /**
  *
  * @author t.marx
  */
-public class StringUtil {
+public class FormHandlingException extends Exception {
 
-	static Random random = new Random();
+	private FormsConfig.Form form = null;
+	
+	/**
+	 * Creates a new instance of <code>FormHandlingException</code> without detail message.
+	 */
+	public FormHandlingException() {
+	}
 
-	public static String random_string() {
-		int leftLimit = 48; // numeral '0'
-		int rightLimit = 122; // letter 'z'
-		int targetStringLength = 10;
-
-		return random.ints(leftLimit, rightLimit + 1)
-				.filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
-				.limit(targetStringLength)
-				.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-				.toString();
+	/**
+	 * Constructs an instance of <code>FormHandlingException</code> with the specified detail message.
+	 *
+	 * @param msg the detail message.
+	 */
+	public FormHandlingException(String msg) {
+		super(msg);
 	}
 	
-	public static boolean isNullOrEmpty (String value) {
-		return value == null || value.isBlank();
+	public FormHandlingException(String msg, final FormsConfig.Form form) {
+		super(msg);
+		this.form = form;
+	}
+	
+	public Optional<FormsConfig.Form> getForm () {
+		return Optional.ofNullable(form);
 	}
 }

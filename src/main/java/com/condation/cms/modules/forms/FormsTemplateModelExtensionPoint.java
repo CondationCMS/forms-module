@@ -25,9 +25,7 @@ package com.condation.cms.modules.forms;
 
 import com.condation.cms.api.extensions.TemplateModelExtendingExtentionPoint;
 import com.condation.cms.api.template.TemplateEngine;
-import com.condation.cms.api.extensions.TemplateModelExtendingExtentionPoint;
 import com.condation.cms.modules.forms.template.FormsTemplateModel;
-import com.condation.modules.api.annotation.Extension;
 import com.condation.modules.api.annotation.Extension;
 
 /**
