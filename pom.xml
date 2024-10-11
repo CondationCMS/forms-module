@@ -14,7 +14,7 @@
 		<module.name>forms module</module.name>
 		<module.priority>NORMAL</module.priority>
 		
-		<cms.version>6.1.0</cms.version>
+		<cms.version>6.3.1</cms.version>
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
 	</properties>
@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>org.simplejavamail</groupId>
 			<artifactId>simple-java-mail</artifactId>
-			<version>8.11.2</version>
+			<version>8.12.2</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.slf4j</groupId>
@@ -61,7 +61,7 @@
 		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
-			<version>2.2</version>
+			<version>2.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
