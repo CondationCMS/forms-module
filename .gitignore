@@ -9,3 +9,4 @@ demo/LICENSE
 demo/log4j2.xml
 demo/README.md
 demo/server.yaml
+.vscode/settings.json
