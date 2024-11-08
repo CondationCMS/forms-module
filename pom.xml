@@ -13,7 +13,7 @@
 		<module.id>forms-module</module.id>
 		<module.name>forms module</module.name>
 		<module.priority>NORMAL</module.priority>
-		<cms.version>7.1.2</cms.version>
+		<cms.version>7.2.0</cms.version>
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
 	</properties>
