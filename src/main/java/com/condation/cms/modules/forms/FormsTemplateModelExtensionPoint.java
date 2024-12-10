@@ -23,7 +23,7 @@ package com.condation.cms.modules.forms;
  */
 
 
-import com.condation.cms.api.extensions.TemplateModelExtendingExtentionPoint;
+import com.condation.cms.api.extensions.TemplateModelExtendingExtensionPoint;
 import com.condation.cms.api.template.TemplateEngine;
 import com.condation.cms.modules.forms.template.FormsTemplateModel;
 import com.condation.modules.api.annotation.Extension;
@@ -32,8 +32,8 @@ import com.condation.modules.api.annotation.Extension;
  *
  * @author t.marx
  */
-@Extension(TemplateModelExtendingExtentionPoint.class)
-public class FormsTemplateModelExtensionPoint extends TemplateModelExtendingExtentionPoint{
+@Extension(TemplateModelExtendingExtensionPoint.class)
+public class FormsTemplateModelExtensionPoint extends TemplateModelExtendingExtensionPoint{
 
 	@Override
 	public void extendModel(TemplateEngine.Model model) {
