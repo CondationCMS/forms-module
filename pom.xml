@@ -14,6 +14,7 @@
 		<module.name>forms module</module.name>
 		<module.priority>NORMAL</module.priority>
 		<cms.version>7.4.2</cms.version>
+		<modules.version>1.0.0</modules.version>
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
 	</properties>
@@ -101,9 +102,9 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.condation.cms.module.framework</groupId>
+			<groupId>com.condation.modules.framework</groupId>
 			<artifactId>modules-api</artifactId>
-			<version>${cms.version}</version>
+			<version>${modules.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
