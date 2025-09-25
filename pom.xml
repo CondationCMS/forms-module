@@ -13,10 +13,11 @@
 		<module.id>forms-module</module.id>
 		<module.name>forms module</module.name>
 		<module.priority>NORMAL</module.priority>
-		<cms.version>7.8.0</cms.version>
+		<cms.version>8.0.0</cms.version>
 		<modules.version>1.2.0</modules.version>
-		<maven.compiler.source>21</maven.compiler.source>
-		<maven.compiler.target>21</maven.compiler.target>
+		<lombok.version>1.18.42</lombok.version>
+		<maven.compiler.source>25</maven.compiler.source>
+		<maven.compiler.target>25</maven.compiler.target>
 	</properties>
 	<inceptionYear>2024</inceptionYear>
 	<organization>
@@ -110,7 +111,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.42</version>
+			<version>${lombok.version}</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
@@ -160,6 +161,25 @@
 					</execution>
 				</executions>
 			</plugin>		
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.14.1</version>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+						<path>
+							<groupId>com.condation.modules.framework</groupId>
+							<artifactId>modules-api</artifactId>
+							<version>${modules.version}</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>     
 		</plugins>
 	</build>
 </project>

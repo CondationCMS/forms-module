@@ -24,8 +24,8 @@ package com.condation.cms.modules.forms;
 
 
 import com.condation.cms.api.feature.features.DBFeature;
-import com.condation.cms.api.module.CMSModuleContext;
-import com.condation.cms.api.module.CMSRequestContext;
+import com.condation.cms.api.module.SiteModuleContext;
+import com.condation.cms.api.module.SiteRequestContext;
 import com.condation.modules.api.ModuleLifeCycleExtension;
 import com.condation.modules.api.annotation.Extension;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -46,7 +46,7 @@ import org.yaml.snakeyaml.Yaml;
  */
 @Slf4j
 @Extension(ModuleLifeCycleExtension.class)
-public class FormsLifecycleExtension extends ModuleLifeCycleExtension<CMSModuleContext, CMSRequestContext> {
+public class FormsLifecycleExtension extends ModuleLifeCycleExtension<SiteModuleContext, SiteRequestContext> {
 
 	public static Cache<String, String> CAPTCHAS;
 	public static FormsConfig FORMSCONFIG;
