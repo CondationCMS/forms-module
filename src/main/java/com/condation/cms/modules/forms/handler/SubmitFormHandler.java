@@ -41,6 +41,7 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.Fields;
+import org.eclipse.jetty.util.Promise;
 
 /**
  *
@@ -68,10 +69,18 @@ public class SubmitFormHandler implements HttpHandler {
 
 		try {
 			if (MimeTypes.Type.FORM_ENCODED.is(contentType)) {
-				CompletableFuture<Fields> completableFields = FormFields.from(request, StandardCharsets.UTF_8);
-				completableFields.whenComplete((fields, failure) -> {
-					try {
-						if (failure == null) {
+
+				FormFields.onFields(request, StandardCharsets.UTF_8, new Promise.Invocable<Fields>() {
+					@Override
+					public void failed(Throwable x) {
+						response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
+						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+					}
+
+					@Override
+					public void succeeded(Fields fields) {
+						try {
+
 							final String formName = fields.get("form").getValue();
 							var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
 							formHandling.handleForm(form, (field) -> {
@@ -82,35 +91,35 @@ public class SubmitFormHandler implements HttpHandler {
 							});
 							response.getHeaders().add("Location", form.getRedirects().getSuccess());
 							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-							callback.succeeded();
-						} else {
-							response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-						}
-					} catch (FormHandlingException fhe) {
-						log.error(null, fhe);
-						var formOpt = fhe.getForm();
-						if (formOpt.isPresent() && !Strings.isNullOrEmpty(formOpt.get().getRedirects().getError())) {
-							response.getHeaders().add("Location", formOpt.get().getRedirects().getError());
-							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-						} else {
-							response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+						} catch (FormHandlingException fhe) {
+							log.error(null, fhe);
+							var formOpt = fhe.getForm();
+							if (formOpt.isPresent() && !Strings.isNullOrEmpty(formOpt.get().getRedirects().getError())) {
+								response.getHeaders().add("Location", formOpt.get().getRedirects().getError());
+								response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+							} else {
+								response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
+								response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+							}
 						}
 					}
-					callback.succeeded();
 				});
 				return true;
 			} else if (contentType.startsWith(MimeTypes.Type.MULTIPART_FORM_DATA.asString())) {
 				String boundary = MultiPart.extractBoundary(contentType);
 				MultiPartFormData.Parser parser = new MultiPartFormData.Parser(boundary);
 				parser.setFilesDirectory(Files.createTempDirectory("cms-upload"));
-				CompletableFuture<MultiPartFormData.Parts> completableParts = parser.parse(request);
+				parser.parse(request, new Promise.Invocable<MultiPartFormData.Parts>() {
+					@Override
+					public void failed(Throwable x) {
+						response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
+						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+						
+					}
 
-				completableParts.whenComplete((parts, failure)
-						-> {
-					try {
-						if (failure == null) {
+					@Override
+					public void succeeded(MultiPartFormData.Parts parts) {
+						try {
 
 							String formName = parts.getFirst("form").getContentAsString(StandardCharsets.UTF_8);
 							var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
@@ -123,22 +132,20 @@ public class SubmitFormHandler implements HttpHandler {
 
 							response.getHeaders().add("Location", form.getRedirects().getSuccess());
 							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-						} else {
-							response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-						}
-					} catch (FormHandlingException fhe) {
-						log.error(null, fhe);
-						var formOpt = fhe.getForm();
-						if (formOpt.isPresent() && !Strings.isNullOrEmpty(formOpt.get().getRedirects().getError())) {
-							response.getHeaders().add("Location", formOpt.get().getRedirects().getError());
-							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-						} else {
-							response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+
+						} catch (FormHandlingException fhe) {
+							log.error(null, fhe);
+							var formOpt = fhe.getForm();
+							if (formOpt.isPresent() && !Strings.isNullOrEmpty(formOpt.get().getRedirects().getError())) {
+								response.getHeaders().add("Location", formOpt.get().getRedirects().getError());
+								response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+							} else {
+								response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
+								response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+							}
 						}
 					}
-					callback.succeeded();
+
 				});
 				return true;
 			}

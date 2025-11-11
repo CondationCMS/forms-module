@@ -21,8 +21,6 @@ package com.condation.cms.modules.forms.handler;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-
-
 import com.condation.cms.api.extensions.HttpHandler;
 import com.condation.cms.api.hooks.HookSystem;
 import com.condation.cms.modules.forms.FormsLifecycleExtension;
@@ -44,6 +42,7 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.Fields;
+import org.eclipse.jetty.util.Promise;
 
 /**
  *
@@ -54,23 +53,23 @@ import org.eclipse.jetty.util.Fields;
 public class AjaxSubmitFormHandler implements HttpHandler {
 
 	private final static Gson GSON = new Gson();
-	
+
 	private final HookSystem hookSystem;
-	
+
 	@Override
 	public boolean handle(Request request, Response response, Callback callback) throws Exception {
 
 		String contentType = request.getHeaders().get(HttpHeader.CONTENT_TYPE);
 
 		FormsHandling formHandling = new FormsHandling(hookSystem);
-		
+
 		final AtomicReference<FormResponse> formResponse = new AtomicReference<>();
 		try {
 			if (MimeTypes.Type.FORM_ENCODED.is(contentType)) {
-				CompletableFuture<Fields> completableFields = FormFields.from(request, StandardCharsets.UTF_8);
-				completableFields.whenComplete((fields, failure) -> {
-					try {
-						if (failure == null) {
+				FormFields.onFields(request, StandardCharsets.UTF_8, new Promise.Invocable<Fields>() {
+					@Override
+					public void succeeded(Fields fields) {
+						try {
 							final String formName = fields.get("form").getValue();
 							var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
 							formHandling.handleForm(form, (field) -> {
@@ -80,12 +79,14 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 								return field;
 							});
 							formResponse.set(new FormResponse(false));
-							callback.succeeded();
-						} else {
+						} catch (FormHandlingException fhe) {
+							log.error(null, fhe);
 							formResponse.set(new FormResponse(true));
 						}
-					} catch (FormHandlingException fhe) {
-						log.error(null, fhe);
+					}
+
+					@Override
+					public void failed(Throwable x) {
 						formResponse.set(new FormResponse(true));
 					}
 				});
@@ -93,12 +94,16 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 				String boundary = MultiPart.extractBoundary(contentType);
 				MultiPartFormData.Parser parser = new MultiPartFormData.Parser(boundary);
 				parser.setFilesDirectory(Files.createTempDirectory("cms-upload"));
-				CompletableFuture<MultiPartFormData.Parts> completableParts = parser.parse(request);
 
-				completableParts.whenComplete((parts, failure)
-						-> {
-					try {
-						if (failure == null) {
+				parser.parse(request, new Promise.Invocable<MultiPartFormData.Parts>() {
+					@Override
+					public void failed(Throwable x) {
+						formResponse.set(new FormResponse(true));
+					}
+
+					@Override
+					public void succeeded(MultiPartFormData.Parts parts) {
+						try {
 
 							String formName = parts.getFirst("form").getContentAsString(StandardCharsets.UTF_8);
 							var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
@@ -110,13 +115,13 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 							});
 
 							formResponse.set(new FormResponse(false));
-						} else {
+
+						} catch (FormHandlingException fhe) {
+							log.error(null, fhe);
 							formResponse.set(new FormResponse(true));
 						}
-					} catch (FormHandlingException fhe) {
-						log.error(null, fhe);
-						formResponse.set(new FormResponse(true));
 					}
+
 				});
 			}
 		} catch (Exception e) {
@@ -129,9 +134,12 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 			response.setStatus(HttpStatus.OK_200);
 		}
 		Content.Sink.write(response, true, GSON.toJson(formResponse.get()), callback);
-		
+
 		return true;
 	}
-	
-	private static record FormResponse (boolean error){};
+
+	private static record FormResponse(boolean error) {
+
+	}
+;
 }
