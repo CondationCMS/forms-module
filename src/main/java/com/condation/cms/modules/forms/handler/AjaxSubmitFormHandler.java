@@ -63,12 +63,12 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 
 		FormsHandling formHandling = new FormsHandling(hookSystem);
 
-		final AtomicReference<FormResponse> formResponse = new AtomicReference<>();
 		try {
 			if (MimeTypes.Type.FORM_ENCODED.is(contentType)) {
 				FormFields.onFields(request, StandardCharsets.UTF_8, new Promise.Invocable<Fields>() {
 					@Override
 					public void succeeded(Fields fields) {
+						FormResponse formResponse;
 						try {
 							final String formName = fields.get("form").getValue();
 							var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
@@ -78,16 +78,21 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 								}
 								return field;
 							});
-							formResponse.set(new FormResponse(false));
+							formResponse = new FormResponse(false);
+							response.setStatus(HttpStatus.OK_200);
 						} catch (FormHandlingException fhe) {
 							log.error(null, fhe);
-							formResponse.set(new FormResponse(true));
+							formResponse = new FormResponse(true);
+							response.setStatus(HttpStatus.BAD_REQUEST_400);
 						}
+						Content.Sink.write(response, true, GSON.toJson(formResponse), callback);
 					}
 
 					@Override
 					public void failed(Throwable x) {
-						formResponse.set(new FormResponse(true));
+						var formResponse = new FormResponse(true);
+						response.setStatus(HttpStatus.BAD_REQUEST_400);
+						Content.Sink.write(response, true, GSON.toJson(formResponse), callback);
 					}
 				});
 			} else if (contentType.startsWith(MimeTypes.Type.MULTIPART_FORM_DATA.asString())) {
@@ -98,11 +103,14 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 				parser.parse(request, new Promise.Invocable<MultiPartFormData.Parts>() {
 					@Override
 					public void failed(Throwable x) {
-						formResponse.set(new FormResponse(true));
+						var formResponse = new FormResponse(true);
+						response.setStatus(HttpStatus.BAD_REQUEST_400);
+						Content.Sink.write(response, true, GSON.toJson(formResponse), callback);
 					}
 
 					@Override
 					public void succeeded(MultiPartFormData.Parts parts) {
+						FormResponse formResponse;
 						try {
 
 							String formName = parts.getFirst("form").getContentAsString(StandardCharsets.UTF_8);
@@ -114,26 +122,28 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 								return field;
 							});
 
-							formResponse.set(new FormResponse(false));
-
+							formResponse = new FormResponse(false);
+							response.setStatus(HttpStatus.OK_200);
 						} catch (FormHandlingException fhe) {
 							log.error(null, fhe);
-							formResponse.set(new FormResponse(true));
+							formResponse = new FormResponse(true);
+							response.setStatus(HttpStatus.BAD_REQUEST_400);
 						}
+						Content.Sink.write(response, true, GSON.toJson(formResponse), callback);
 					}
 
 				});
+			} else {
+				var formResponse = new FormResponse(true);
+				response.setStatus(HttpStatus.BAD_REQUEST_400);
+				Content.Sink.write(response, true, GSON.toJson(formResponse), callback);
 			}
 		} catch (Exception e) {
 			log.error("error processing form", e);
-		}
-
-		if (formResponse.get().error()) {
+			var formResponse = new FormResponse(true);
 			response.setStatus(HttpStatus.BAD_REQUEST_400);
-		} else {
-			response.setStatus(HttpStatus.OK_200);
+			Content.Sink.write(response, true, GSON.toJson(formResponse), callback);
 		}
-		Content.Sink.write(response, true, GSON.toJson(formResponse.get()), callback);
 
 		return true;
 	}
