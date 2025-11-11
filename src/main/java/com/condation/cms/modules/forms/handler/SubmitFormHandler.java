@@ -75,6 +75,7 @@ public class SubmitFormHandler implements HttpHandler {
 					public void failed(Throwable x) {
 						response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
 						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+						callback.succeeded();
 					}
 
 					@Override
@@ -101,10 +102,11 @@ public class SubmitFormHandler implements HttpHandler {
 								response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
 								response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
 							}
+						} finally {
+							callback.succeeded();
 						}
 					}
 				});
-				return true;
 			} else if (contentType.startsWith(MimeTypes.Type.MULTIPART_FORM_DATA.asString())) {
 				String boundary = MultiPart.extractBoundary(contentType);
 				MultiPartFormData.Parser parser = new MultiPartFormData.Parser(boundary);
@@ -114,7 +116,7 @@ public class SubmitFormHandler implements HttpHandler {
 					public void failed(Throwable x) {
 						response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
 						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-						
+						callback.succeeded();
 					}
 
 					@Override
@@ -143,19 +145,23 @@ public class SubmitFormHandler implements HttpHandler {
 								response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
 								response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
 							}
+						} finally {
+							callback.succeeded();
 						}
 					}
 
 				});
-				return true;
+			} else {
+				response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
+				response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+				callback.succeeded();
 			}
 		} catch (Exception e) {
 			log.error("error processing form", e);
+			response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
+			response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
+			callback.succeeded();
 		}
-
-		response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-		response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-		callback.succeeded();
 		return true;
 	}
 }
