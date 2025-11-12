@@ -58,6 +58,7 @@ public class AjaxSubmitFormHandler implements HttpHandler {
 	public boolean handle(Request request, Response response, Callback callback) throws Exception {
 
 		String contentType = request.getHeaders().get(HttpHeader.CONTENT_TYPE);
+		response.getHeaders().add(HttpHeader.CONTENT_TYPE, "application/json");
 
 		FormsHandling formHandling = new FormsHandling(hookSystem);
 

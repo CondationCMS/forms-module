@@ -28,6 +28,7 @@ import com.condation.cms.modules.forms.FormsLifecycleExtension;
 import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
@@ -45,6 +46,8 @@ public class AjaxCaptchaValidationHandler implements HttpHandler {
 	@Override
 	public boolean handle(Request request, Response response, Callback callback) throws Exception {
 
+		response.getHeaders().add(HttpHeader.CONTENT_TYPE, "application/json");
+		
 		if (!"POST".equalsIgnoreCase(request.getMethod())) {
 			response.setStatus(405);
 			callback.succeeded();
