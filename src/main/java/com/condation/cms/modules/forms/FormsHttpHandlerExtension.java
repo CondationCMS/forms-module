@@ -47,10 +47,10 @@ public class FormsHttpHandlerExtension extends HttpHandlerExtensionPoint {
 		mapping.add(PathSpec.from("/captcha/validate"), new AjaxCaptchaValidationHandler());
 		mapping.add(PathSpec.from("/captcha/generate"), new GenerateCaptchaHandler());
 		mapping.add(PathSpec.from("/form/submit/ajax"), 
-				new AjaxSubmitFormHandler(requestContext.get(HookSystemFeature.class).hookSystem())
+				new AjaxSubmitFormHandler(requestContext.get(HookSystemFeature.class).hookSystem(), getContext())
 		);
 		mapping.add(PathSpec.from("/form/submit"), 
-				new SubmitFormHandler(requestContext.get(HookSystemFeature.class).hookSystem())
+				new SubmitFormHandler(requestContext.get(HookSystemFeature.class).hookSystem(), getContext())
 		);
 		
 		return mapping;

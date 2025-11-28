@@ -23,6 +23,7 @@ package com.condation.cms.modules.forms.handler;
  */
 import com.condation.cms.api.extensions.HttpHandler;
 import com.condation.cms.api.hooks.HookSystem;
+import com.condation.cms.api.module.SiteModuleContext;
 import com.condation.cms.modules.forms.FormsLifecycleExtension;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
@@ -53,6 +54,8 @@ public class SubmitFormHandler implements HttpHandler {
 	private static Gson GSON = new Gson();
 
 	private final HookSystem hookSystem;
+	
+	private final SiteModuleContext siteModuleContext;
 
 	@Override
 	public boolean handle(Request request, Response response, Callback callback) throws Exception {
@@ -64,7 +67,7 @@ public class SubmitFormHandler implements HttpHandler {
 
 		String contentType = request.getHeaders().get(HttpHeader.CONTENT_TYPE);
 
-		FormsHandling formHandling = new FormsHandling(hookSystem);
+		FormsHandling formHandling = new FormsHandling(hookSystem, siteModuleContext);
 
 		try {
 			if (MimeTypes.Type.FORM_ENCODED.is(contentType)) {

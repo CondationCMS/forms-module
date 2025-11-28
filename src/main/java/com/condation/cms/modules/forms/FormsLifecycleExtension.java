@@ -36,8 +36,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
-import org.simplejavamail.api.mailer.Mailer;
-import org.simplejavamail.mailer.MailerBuilder;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -50,7 +48,6 @@ public class FormsLifecycleExtension extends ModuleLifeCycleExtension<SiteModule
 
 	public static Cache<String, String> CAPTCHAS;
 	public static FormsConfig FORMSCONFIG;
-	public static Mailer MAILER;
 
 	@Override
 	public void init() {
@@ -67,9 +64,6 @@ public class FormsLifecycleExtension extends ModuleLifeCycleExtension<SiteModule
 		Path formsConfig = getContext().get(DBFeature.class).db().getFileSystem().resolve("config/forms.yaml");
 		try {
 			FORMSCONFIG = new Yaml().loadAs(Files.readString(formsConfig, StandardCharsets.UTF_8), FormsConfig.class);
-			
-			MAILER = MailerBuilder.withSMTPServer(FORMSCONFIG.getMail().getSmtp().getHostname(), FORMSCONFIG.getMail().getSmtp().getPort()).buildMailer();
-			
 		} catch (IOException ex) {
 			log.error(null, ex);
 		}

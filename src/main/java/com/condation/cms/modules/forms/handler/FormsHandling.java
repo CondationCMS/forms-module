@@ -23,7 +23,11 @@ package com.condation.cms.modules.forms.handler;
  */
 
 
+import com.condation.cms.api.feature.features.InjectorFeature;
 import com.condation.cms.api.hooks.HookSystem;
+import com.condation.cms.api.mail.MailService;
+import com.condation.cms.api.mail.Message;
+import com.condation.cms.api.module.SiteModuleContext;
 import com.condation.cms.modules.forms.FormsConfig;
 import com.condation.cms.modules.forms.FormsLifecycleExtension;
 import com.condation.cms.modules.forms.utils.StringUtil;
@@ -32,7 +36,6 @@ import java.util.Map;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.simplejavamail.email.EmailBuilder;
 
 /**
  *
@@ -43,6 +46,8 @@ import org.simplejavamail.email.EmailBuilder;
 public class FormsHandling {
 
 	private final HookSystem hookSystem;
+	
+	private final SiteModuleContext siteModuleContext;
 	
 	private void validateCaptcha(final FormsConfig.Form form, final String key, final String code) throws FormHandlingException {
 		String captchaCode = FormsLifecycleExtension.CAPTCHAS.getIfPresent(key);
@@ -99,12 +104,17 @@ public class FormsHandling {
 			if (StringUtil.isNullOrEmpty(form.getTo())) {
 				return;
 			}
-			FormsLifecycleExtension.MAILER.sendMail(EmailBuilder.startingBlank()
-					.to(form.getTo())
-					.from(parameters.apply("from"))
-					.appendText(buildMessage(form, parameters))
-					.withSubject(form.getSubject())
-					.buildEmail());
+			
+			var mailService = siteModuleContext.get(InjectorFeature.class).injector().getInstance(MailService.class);
+			
+			var message = new Message(
+					parameters.apply("from"), 
+					new com.condation.cms.api.mail.Message.Recipient("", form.getTo()), 
+					form.getSubject(), 
+					buildMessage(form, parameters)
+			);
+			
+			mailService.sendText(form.getMail().getAccount(), message);
 		} catch (Exception e) {
 			log.error(null, e);
 			throw new FormHandlingException(e.getMessage());
