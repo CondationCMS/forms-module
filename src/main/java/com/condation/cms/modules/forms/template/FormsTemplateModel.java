@@ -37,7 +37,7 @@ public class FormsTemplateModel {
 		return captcha;
 	}
 	
-	public class Captcha {
+	public static class Captcha {
 		public String generateKey () {
 			return StringUtil.random_string();
 		}

@@ -24,6 +24,7 @@ package com.condation.cms.modules.forms.handler;
 
 
 import com.condation.cms.modules.forms.FormsConfig;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -33,11 +34,14 @@ import java.util.Optional;
 public class FormHandlingException extends Exception {
 
 	private FormsConfig.Form form = null;
+	private final String code;
+	private final Map<String, String> fieldErrors;
 	
 	/**
 	 * Creates a new instance of <code>FormHandlingException</code> without detail message.
 	 */
 	public FormHandlingException() {
+		this("FORM_ERROR", "form handling failed", null, Map.of());
 	}
 
 	/**
@@ -46,15 +50,33 @@ public class FormHandlingException extends Exception {
 	 * @param msg the detail message.
 	 */
 	public FormHandlingException(String msg) {
-		super(msg);
+		this("FORM_ERROR", msg, null, Map.of());
 	}
 	
 	public FormHandlingException(String msg, final FormsConfig.Form form) {
+		this("FORM_ERROR", msg, form, Map.of());
+	}
+
+	public FormHandlingException(
+			final String code,
+			final String msg,
+			final FormsConfig.Form form,
+			final Map<String, String> fieldErrors) {
 		super(msg);
 		this.form = form;
+		this.code = code;
+		this.fieldErrors = Map.copyOf(fieldErrors);
 	}
 	
 	public Optional<FormsConfig.Form> getForm () {
 		return Optional.ofNullable(form);
+	}
+
+	public String getCode() {
+		return code;
+	}
+
+	public Map<String, String> getFieldErrors() {
+		return fieldErrors;
 	}
 }

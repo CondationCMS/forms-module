@@ -29,41 +29,61 @@ import com.condation.cms.api.mail.MailService;
 import com.condation.cms.api.mail.Message;
 import com.condation.cms.api.module.SiteModuleContext;
 import com.condation.cms.modules.forms.FormsConfig;
-import com.condation.cms.modules.forms.FormsLifecycleExtension;
+import com.condation.cms.modules.forms.FormsFeature;
 import com.condation.cms.modules.forms.utils.StringUtil;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.regex.Pattern;
 
 /**
  *
  * @author t.marx
  */
-@RequiredArgsConstructor
-@Slf4j
 public class FormsHandling {
+
+	private static final Pattern EMAIL = Pattern.compile(
+			"^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+	private static final Set<String> TRUE_VALUES = Set.of("true", "1", "on", "yes");
+	private static final Set<String> FALSE_VALUES = Set.of("false", "0", "off", "no");
 
 	private final HookSystem hookSystem;
 	
 	private final SiteModuleContext siteModuleContext;
+
+	public FormsHandling(final HookSystem hookSystem, final SiteModuleContext siteModuleContext) {
+		this.hookSystem = hookSystem;
+		this.siteModuleContext = siteModuleContext;
+	}
 	
 	private void validateCaptcha(final FormsConfig.Form form, final String key, final String code) throws FormHandlingException {
-		String captchaCode = FormsLifecycleExtension.CAPTCHAS.getIfPresent(key);
-		if (captchaCode == null || !captchaCode.equals(code)) {
-			throw new FormHandlingException("invalid captcha", form);
+		var captchas = siteModuleContext.get(FormsFeature.class).captchas();
+		var challenge = key == null ? null : captchas.getIfPresent(key);
+		if (challenge == null || challenge.formName() != null && !challenge.formName().equals(form.getName())
+				|| code == null || !challenge.answer().equalsIgnoreCase(code.trim())) {
+			if (challenge != null) {
+				if (challenge.attempts() >= 4) {
+					captchas.invalidate(key);
+				} else {
+					captchas.put(key, challenge.failedAttempt());
+				}
+			}
+			throw new FormHandlingException("INVALID_CAPTCHA", "invalid captcha", form, Map.of());
 		}
-
+		captchas.invalidate(key);
 	}
 
 	private String buildMessage(final FormsConfig.Form form, final Function<String, String> parameters) {
 		StringBuilder message = new StringBuilder();
 
 		if (form.getFields() != null) {
-			form.getFields().forEach(field -> {
+			form.getFields().keySet().forEach(field -> {
 				var value = parameters.apply(field);
-				message.append("field: ").append(field).append("\r\n").append(value);
+				message.append(field).append(":\r\n")
+						.append(value == null ? "" : value)
+						.append("\r\n\r\n");
 			});
 		}
 
@@ -74,7 +94,7 @@ public class FormsHandling {
 		Map<String, Object> data = new HashMap<>();
 
 		if (form.getFields() != null) {
-			form.getFields().forEach(field -> {
+			form.getFields().keySet().forEach(field -> {
 				var value = parameters.apply(field);
 				data.put(field, value);
 			});
@@ -86,18 +106,71 @@ public class FormsHandling {
 		
 		return data;
 	}
+
+	private void validateSpam(final FormsConfig.Form form, final Function<String, String> parameters)
+			throws FormHandlingException {
+		var spam = form.getSpam();
+		if (spam != null && spam.getHoneypot() != null && spam.getHoneypot().isEnabled()) {
+			var value = parameters.apply(spam.getHoneypot().getField());
+			if (!StringUtil.isNullOrEmpty(value)) {
+				throw new FormHandlingException("SPAM_REJECTED", "submission rejected", form, Map.of());
+			}
+		}
+	}
+
+	private void validateFields(final FormsConfig.Form form, final Function<String, String> parameters)
+			throws FormHandlingException {
+		var errors = new LinkedHashMap<String, String>();
+		form.getFields().forEach((name, definition) -> {
+			var value = parameters.apply(name);
+			if (StringUtil.isNullOrEmpty(value)) {
+				if (definition.isRequired()) {
+					errors.put(name, "required");
+				}
+				return;
+			}
+
+			var normalized = value.trim();
+			if (definition.getMinLength() != null && normalized.length() < definition.getMinLength()) {
+				errors.put(name, "min_length");
+			} else if (definition.getMaxLength() != null && normalized.length() > definition.getMaxLength()) {
+				errors.put(name, "max_length");
+			} else if ("email".equals(definition.getType()) && !EMAIL.matcher(normalized).matches()) {
+				errors.put(name, "invalid_email");
+			} else if ("integer".equals(definition.getType())) {
+				try {
+					Long.valueOf(normalized);
+				} catch (NumberFormatException ex) {
+					errors.put(name, "invalid_integer");
+				}
+			} else if ("boolean".equals(definition.getType())
+					&& !TRUE_VALUES.contains(normalized.toLowerCase())
+					&& !FALSE_VALUES.contains(normalized.toLowerCase())) {
+				errors.put(name, "invalid_boolean");
+			} else if (definition.getPattern() != null
+					&& !Pattern.compile(definition.getPattern()).matcher(value).matches()) {
+				errors.put(name, "pattern");
+			} else if (definition.getAllowedValues() != null
+					&& !definition.getAllowedValues().isEmpty()
+					&& !definition.getAllowedValues().contains(value)) {
+				errors.put(name, "not_allowed");
+			}
+		});
+		if (!errors.isEmpty()) {
+			throw new FormHandlingException(
+					"VALIDATION_FAILED", "field validation failed", form, errors);
+		}
+	}
 	
 	public void handleForm(final FormsConfig.Form form, final Function<String, String> parameters) throws FormHandlingException {
+		validateSpam(form, parameters);
+		validateFields(form, parameters);
+		validateCaptcha(form, parameters.apply("key"), parameters.apply("code"));
+
 		try {
-			final String key = parameters.apply("key");
-			String captchaCode = FormsLifecycleExtension.CAPTCHAS.getIfPresent(key);
-
-			validateCaptcha(form, key, captchaCode);
-			FormsLifecycleExtension.CAPTCHAS.invalidate(key);
-
 			var data = hookData(form, parameters);
 			data.put("form", form.getName());
-			hookSystem.execute(
+			hookSystem.doAction(
 					"forms/%s/submit".formatted(form.getName()), 
 					data);
 			
@@ -108,16 +181,23 @@ public class FormsHandling {
 			var mailService = siteModuleContext.get(InjectorFeature.class).injector().getInstance(MailService.class);
 			
 			var message = new Message(
-					parameters.apply("from"), 
+					form.getMail().getFrom(),
 					new com.condation.cms.api.mail.Message.Recipient("", form.getTo()), 
-					form.getSubject(), 
+					sanitizeHeader(form.getSubject()),
 					buildMessage(form, parameters)
 			);
 			
 			mailService.sendText(form.getMail().getAccount(), message);
 		} catch (Exception e) {
-			log.error(null, e);
-			throw new FormHandlingException(e.getMessage());
+			System.getLogger(getClass().getName()).log(
+					System.Logger.Level.ERROR,
+					"Actions failed for form " + form.getName(),
+					e);
+			throw new FormHandlingException("ACTION_FAILED", "form actions failed", form, Map.of());
 		}
+	}
+
+	private String sanitizeHeader(final String value) {
+		return value == null ? "" : value.replace("\r", "").replace("\n", "");
 	}
 }

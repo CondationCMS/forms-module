@@ -26,7 +26,6 @@ package com.condation.cms.modules.forms;
 import com.condation.cms.api.extensions.HttpHandlerExtensionPoint;
 import com.condation.cms.api.extensions.Mapping;
 import com.condation.cms.api.feature.features.HookSystemFeature;
-import com.condation.cms.modules.forms.handler.AjaxCaptchaValidationHandler;
 import com.condation.cms.modules.forms.handler.AjaxSubmitFormHandler;
 import com.condation.cms.modules.forms.handler.GenerateCaptchaHandler;
 import com.condation.cms.modules.forms.handler.SubmitFormHandler;
@@ -44,13 +43,12 @@ public class FormsHttpHandlerExtension extends HttpHandlerExtensionPoint {
 	public Mapping getMapping() {
 		Mapping mapping = new Mapping();
 		
-		mapping.add(PathSpec.from("/captcha/validate"), new AjaxCaptchaValidationHandler());
-		mapping.add(PathSpec.from("/captcha/generate"), new GenerateCaptchaHandler());
+		mapping.add(PathSpec.from("/captcha/generate"), new GenerateCaptchaHandler(getContext()));
 		mapping.add(PathSpec.from("/form/submit/ajax"), 
-				new AjaxSubmitFormHandler(requestContext.get(HookSystemFeature.class).hookSystem(), getContext())
+				new AjaxSubmitFormHandler(getRequestContext().get(HookSystemFeature.class).hookSystem(), getContext())
 		);
 		mapping.add(PathSpec.from("/form/submit"), 
-				new SubmitFormHandler(requestContext.get(HookSystemFeature.class).hookSystem(), getContext())
+				new SubmitFormHandler(getRequestContext().get(HookSystemFeature.class).hookSystem(), getContext())
 		);
 		
 		return mapping;

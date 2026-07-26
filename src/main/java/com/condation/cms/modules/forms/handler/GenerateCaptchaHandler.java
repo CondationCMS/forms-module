@@ -24,8 +24,9 @@ package com.condation.cms.modules.forms.handler;
 
 
 import com.condation.cms.api.extensions.HttpHandler;
+import com.condation.cms.api.module.SiteModuleContext;
 import com.condation.cms.api.utils.HTTPUtil;
-import com.condation.cms.modules.forms.FormsLifecycleExtension;
+import com.condation.cms.modules.forms.FormsFeature;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -34,6 +35,8 @@ import javax.imageio.ImageIO;
 import net.logicsquad.nanocaptcha.image.ImageCaptcha;
 import net.logicsquad.nanocaptcha.image.filter.StretchImageFilter;
 import net.logicsquad.nanocaptcha.image.noise.StraightLineNoiseProducer;
+import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
@@ -46,7 +49,13 @@ import org.eclipse.jetty.util.Callback;
 public class GenerateCaptchaHandler implements HttpHandler {
 
 	private static final int DEFAULT_CAPTCHA_WIDTH = 250;
-	private static final int DEFAULT_CAPTCHA_HEIGHT = 250;
+	private static final int DEFAULT_CAPTCHA_HEIGHT = 80;
+	private static final int MIN_CAPTCHA_SIZE = 32;
+	private final SiteModuleContext siteModuleContext;
+
+	public GenerateCaptchaHandler(final SiteModuleContext siteModuleContext) {
+		this.siteModuleContext = siteModuleContext;
+	}
 	
 	@Override
 	public boolean handle(Request request, Response response, Callback callback) throws Exception {
@@ -55,18 +64,35 @@ public class GenerateCaptchaHandler implements HttpHandler {
 		
 		int width = getSizeParam("width", queryParameters, DEFAULT_CAPTCHA_WIDTH);
 		int height = getSizeParam("height", queryParameters, DEFAULT_CAPTCHA_HEIGHT);
-		
-		String key = queryParameters.getOrDefault("key", List.of("default")).get(0);
+
+		String key = first(queryParameters, "key");
+		String formName = first(queryParameters, "form");
+		var feature = siteModuleContext.get(FormsFeature.class);
+		if (!validKey(key) || feature.config().findForm(formName).isEmpty()) {
+			Response.writeError(request, response, callback, HttpStatus.BAD_REQUEST_400, "invalid captcha request");
+			return true;
+		}
+		String client = RequestSecurity.clientIdentifier(request);
+		if (!feature.allow("captcha:" + client, feature.config().getCaptchaRateLimit())) {
+			response.getHeaders().put(HttpHeader.CACHE_CONTROL, "no-store");
+			Response.writeError(request, response, callback, HttpStatus.TOO_MANY_REQUESTS_429, "rate limit exceeded");
+			return true;
+		}
 		
 		ImageCaptcha imageCaptcha = new ImageCaptcha.Builder(width, height).addContent()
 				.addFilter(new StretchImageFilter())
 				.addNoise(new StraightLineNoiseProducer())
 				.build();
 		
-		FormsLifecycleExtension.CAPTCHAS.put(key, imageCaptcha.getContent());
+		feature.captchas().put(
+				key,
+				new FormsFeature.CaptchaChallenge(imageCaptcha.getContent(), formName, 0));
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ImageIO.write(imageCaptcha.getImage(), "PNG", baos);
 		byte[] bytes = baos.toByteArray();
+		response.getHeaders().put(HttpHeader.CONTENT_TYPE, "image/png");
+		response.getHeaders().put(HttpHeader.CACHE_CONTROL, "no-store, no-cache, must-revalidate");
+		response.getHeaders().put("Pragma", "no-cache");
 		Content.Sink.write(response, true, ByteBuffer.wrap(bytes));
 		callback.succeeded();
 		
@@ -75,13 +101,22 @@ public class GenerateCaptchaHandler implements HttpHandler {
 	
 	private int getSizeParam (final String name, Map<String, List<String>> queryParameters, final int defaultValue) {
 		String sizeParam = queryParameters.getOrDefault(name, List.of(String.valueOf(defaultValue))).get(0);
-		
-		int intValue = Integer.parseInt(sizeParam.trim());
-		if (intValue > defaultValue) {
+
+		try {
+			int intValue = Integer.parseInt(sizeParam.trim());
+			return Math.clamp(intValue, MIN_CAPTCHA_SIZE, defaultValue);
+		} catch (NumberFormatException ex) {
 			return defaultValue;
-		} else {
-			return intValue;
 		}
 	}
 
+	private String first(final Map<String, List<String>> parameters, final String name) {
+		var values = parameters.get(name);
+		return values == null || values.isEmpty() ? null : values.getFirst();
+	}
+
+	private boolean validKey(final String key) {
+		return key != null && key.length() >= 32 && key.length() <= 128
+				&& key.matches("[A-Za-z0-9_-]+");
+	}
 }

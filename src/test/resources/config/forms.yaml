@@ -2,10 +2,21 @@ forms:
   - name: contact
     to: contact@example.com
     subject: Ich suche Kontakt!
-    fields: [message]
+    fields:
+      from:
+        type: email
+        required: true
+      message:
+        required: true
+        minLength: 10
+        maxLength: 5000
+    mail:
+      from: forms@example.com
     redirects:
       success: /forms/contact/success
   - name: test-form
+    fields:
+      message: {}
     redirects:
       success: /forms/contact/success
     mail: 

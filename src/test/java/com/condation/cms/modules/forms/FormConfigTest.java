@@ -39,11 +39,16 @@ public class FormConfigTest {
 	void test_config () throws Exception {
 		var FORMSCONFIG = new Yaml().loadAs(
 				Files.readString(Path.of("src/test/resources/config/forms.yaml"), StandardCharsets.UTF_8), FormsConfig.class);
+		FORMSCONFIG.validate();
 		
 		Assertions.assertThat(FORMSCONFIG.findForm("contact")).isPresent();
 		Assertions.assertThat(FORMSCONFIG.findForm("test-form")).isPresent();
+		Assertions.assertThat(FORMSCONFIG.findForm("missing")).isEmpty();
 		
 		Assertions.assertThat(FORMSCONFIG.findForm("contact").get().getMail().getAccount()).isEqualTo("default");
+		Assertions.assertThat(FORMSCONFIG.findForm("contact").get().getMail().getFrom()).isEqualTo("forms@example.com");
+		Assertions.assertThat(FORMSCONFIG.findForm("contact").get().getFields().get("from").getType()).isEqualTo("email");
+		Assertions.assertThat(FORMSCONFIG.findForm("contact").get().getFields().get("message").getMinLength()).isEqualTo(10);
 		Assertions.assertThat(FORMSCONFIG.findForm("test-form").get().getMail().getAccount()).isEqualTo("other");
 	}
 }

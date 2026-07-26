@@ -25,47 +25,43 @@ package com.condation.cms.modules.forms;
 
 import com.condation.cms.api.feature.features.DBFeature;
 import com.condation.cms.api.module.SiteModuleContext;
-import com.condation.cms.api.module.SiteRequestContext;
 import com.condation.modules.api.ModuleLifeCycleExtension;
 import com.condation.modules.api.annotation.Extension;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
 
 /**
  *
  * @author t.marx
  */
-@Slf4j
 @Extension(ModuleLifeCycleExtension.class)
-public class FormsLifecycleExtension extends ModuleLifeCycleExtension<SiteModuleContext, SiteRequestContext> {
-
-	public static Cache<String, String> CAPTCHAS;
-	public static FormsConfig FORMSCONFIG;
+public class FormsLifecycleExtension extends ModuleLifeCycleExtension<SiteModuleContext> {
 
 	@Override
 	public void init() {
-
 	}
 
 	@Override
 	public void activate() {
-		CAPTCHAS = Caffeine.newBuilder()
-				.maximumSize(10_000)
-				.expireAfterWrite(Duration.ofMinutes(5))
-				.build();
-		
 		Path formsConfig = getContext().get(DBFeature.class).db().getFileSystem().resolve("config/forms.yaml");
 		try {
-			FORMSCONFIG = new Yaml().loadAs(Files.readString(formsConfig, StandardCharsets.UTF_8), FormsConfig.class);
-		} catch (IOException ex) {
-			log.error(null, ex);
+			var config = new Yaml().loadAs(
+					Files.readString(formsConfig, StandardCharsets.UTF_8),
+					FormsConfig.class);
+			if (config == null) {
+				throw new IllegalArgumentException("forms.yaml is empty");
+			}
+			config.validate();
+			getContext().add(FormsFeature.class, new FormsFeature(config));
+		} catch (IOException | RuntimeException ex) {
+			System.getLogger(getClass().getName()).log(
+					System.Logger.Level.ERROR,
+					"Could not activate forms module: invalid config " + formsConfig,
+					ex);
+			throw new IllegalStateException("Could not load forms configuration", ex);
 		}
 	}
 

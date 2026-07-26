@@ -10,32 +10,27 @@ package com.condation.cms.modules.forms.handler;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+
 import com.condation.cms.api.extensions.HttpHandler;
 import com.condation.cms.api.hooks.HookSystem;
 import com.condation.cms.api.module.SiteModuleContext;
-import com.condation.cms.modules.forms.FormsLifecycleExtension;
-import com.google.common.base.Strings;
-import com.google.gson.Gson;
+import com.condation.cms.modules.forms.FormsConfig;
+import com.condation.cms.modules.forms.FormsFeature;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.MimeTypes;
-import org.eclipse.jetty.http.MultiPart;
-import org.eclipse.jetty.http.MultiPartFormData;
 import org.eclipse.jetty.server.FormFields;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
@@ -44,126 +39,96 @@ import org.eclipse.jetty.util.Fields;
 import org.eclipse.jetty.util.Promise;
 
 /**
- *
- * @author t.marx
+ * Handles browser form submissions. Uploads are deliberately rejected until a
+ * bounded and validated upload policy exists.
  */
-@Slf4j
-@RequiredArgsConstructor
 public class SubmitFormHandler implements HttpHandler {
 
-	private static Gson GSON = new Gson();
-
 	private final HookSystem hookSystem;
-	
 	private final SiteModuleContext siteModuleContext;
 
-	@Override
-	public boolean handle(Request request, Response response, Callback callback) throws Exception {
+	public SubmitFormHandler(final HookSystem hookSystem, final SiteModuleContext siteModuleContext) {
+		this.hookSystem = hookSystem;
+		this.siteModuleContext = siteModuleContext;
+	}
 
+	@Override
+	public boolean handle(final Request request, final Response response, final Callback callback) {
 		if (!"POST".equalsIgnoreCase(request.getMethod())) {
+			response.getHeaders().put(HttpHeader.ALLOW, "POST");
 			Response.writeError(request, response, callback, HttpStatus.METHOD_NOT_ALLOWED_405, "invalid request");
 			return true;
 		}
 
-		String contentType = request.getHeaders().get(HttpHeader.CONTENT_TYPE);
-
-		FormsHandling formHandling = new FormsHandling(hookSystem, siteModuleContext);
-
-		try {
-			if (MimeTypes.Type.FORM_ENCODED.is(contentType)) {
-
-				FormFields.onFields(request, StandardCharsets.UTF_8, new Promise.Invocable<Fields>() {
-					@Override
-					public void failed(Throwable x) {
-						response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-						callback.succeeded();
-					}
-
-					@Override
-					public void succeeded(Fields fields) {
-						try {
-
-							final String formName = fields.get("form").getValue();
-							var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
-							formHandling.handleForm(form, (field) -> {
-								if (fields.get(field) != null) {
-									return fields.get(field).getValue();
-								}
-								return field;
-							});
-							response.getHeaders().add("Location", form.getRedirects().getSuccess());
-							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-						} catch (FormHandlingException fhe) {
-							log.error(null, fhe);
-							var formOpt = fhe.getForm();
-							if (formOpt.isPresent() && !Strings.isNullOrEmpty(formOpt.get().getRedirects().getError())) {
-								response.getHeaders().add("Location", formOpt.get().getRedirects().getError());
-								response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-							} else {
-								response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-								response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-							}
-						} finally {
-							callback.succeeded();
-						}
-					}
-				});
-			} else if (contentType.startsWith(MimeTypes.Type.MULTIPART_FORM_DATA.asString())) {
-				String boundary = MultiPart.extractBoundary(contentType);
-				MultiPartFormData.Parser parser = new MultiPartFormData.Parser(boundary);
-				parser.setFilesDirectory(Files.createTempDirectory("cms-upload"));
-				parser.parse(request, new Promise.Invocable<MultiPartFormData.Parts>() {
-					@Override
-					public void failed(Throwable x) {
-						response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-						response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-						callback.succeeded();
-					}
-
-					@Override
-					public void succeeded(MultiPartFormData.Parts parts) {
-						try {
-
-							String formName = parts.getFirst("form").getContentAsString(StandardCharsets.UTF_8);
-							var form = FormsLifecycleExtension.FORMSCONFIG.findForm(formName).get();
-							formHandling.handleForm(form, (field) -> {
-								if (parts.getAll(field) != null && !parts.getAll(field).isEmpty()) {
-									return parts.getAll(field).getFirst().getContentAsString(StandardCharsets.UTF_8);
-								}
-								return field;
-							});
-
-							response.getHeaders().add("Location", form.getRedirects().getSuccess());
-							response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-
-						} catch (FormHandlingException fhe) {
-							log.error(null, fhe);
-							var formOpt = fhe.getForm();
-							if (formOpt.isPresent() && !Strings.isNullOrEmpty(formOpt.get().getRedirects().getError())) {
-								response.getHeaders().add("Location", formOpt.get().getRedirects().getError());
-								response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-							} else {
-								response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-								response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-							}
-						} finally {
-							callback.succeeded();
-						}
-					}
-
-				});
-			} else {
-				response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-				response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-				callback.succeeded();
-			}
-		} catch (Exception e) {
-			log.error("error processing form", e);
-			response.getHeaders().add("Location", FormsLifecycleExtension.FORMSCONFIG.getRedirects().getError());
-			response.setStatus(HttpStatus.MOVED_TEMPORARILY_302);
-			callback.succeeded();
+		var feature = siteModuleContext.get(FormsFeature.class);
+		if (!RequestSecurity.isAllowed(request, feature.config().getCsrf())) {
+			redirect(response, callback, feature.config().errorRedirect(null));
+			return true;
 		}
+		String contentType = request.getHeaders().get(HttpHeader.CONTENT_TYPE);
+		if (contentType == null || !MimeTypes.Type.FORM_ENCODED.is(contentType)) {
+			redirect(response, callback, feature.config().errorRedirect(null));
+			return true;
+		}
+
+		var formHandling = new FormsHandling(hookSystem, siteModuleContext);
+		FormFields.onFields(request, StandardCharsets.UTF_8, new Promise.Invocable<Fields>() {
+			@Override
+			public void failed(final Throwable failure) {
+				logger().log(System.Logger.Level.WARNING, "Could not parse form submission", failure);
+				redirect(response, callback, feature.config().errorRedirect(null));
+			}
+
+			@Override
+			public void succeeded(final Fields fields) {
+				FormsConfig.Form form = null;
+				try {
+					var formName = value(fields, "form");
+					form = feature.config().findForm(formName)
+							.orElseThrow(() -> new FormHandlingException(
+							"UNKNOWN_FORM", "unknown form", null, java.util.Map.of()));
+					enforceRateLimit(request, feature, form);
+					var selectedForm = form;
+					formHandling.handleForm(selectedForm, name -> value(fields, name));
+					redirect(response, callback, feature.config().successRedirect(selectedForm));
+				} catch (FormHandlingException ex) {
+					logger().log(System.Logger.Level.INFO, "Rejected form submission: " + ex.getCode());
+					redirect(response, callback, feature.config().errorRedirect(form));
+				} catch (RuntimeException ex) {
+					logger().log(System.Logger.Level.ERROR, "Unexpected form submission error", ex);
+					redirect(response, callback, feature.config().errorRedirect(form));
+				}
+			}
+		});
 		return true;
+	}
+
+	private void enforceRateLimit(
+			final Request request,
+			final FormsFeature feature,
+			final FormsConfig.Form form) throws FormHandlingException {
+		var client = RequestSecurity.clientIdentifier(request);
+		if (!feature.allow("submit:" + form.getName() + ":" + client, form.getRateLimit())) {
+			throw new FormHandlingException(
+					"RATE_LIMITED", "rate limit exceeded", form, java.util.Map.of());
+		}
+	}
+
+	private static String value(final Fields fields, final String name) {
+		var field = fields.get(name);
+		return field == null ? null : field.getValue();
+	}
+
+	private static void redirect(
+			final Response response,
+			final Callback callback,
+			final String location) {
+		response.getHeaders().put(HttpHeader.LOCATION, location);
+		response.setStatus(HttpStatus.SEE_OTHER_303);
+		callback.succeeded();
+	}
+
+	private static System.Logger logger() {
+		return System.getLogger(SubmitFormHandler.class.getName());
 	}
 }
