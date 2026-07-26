@@ -35,8 +35,6 @@ import lombok.Data;
 @Data
 public class FormsConfig {
 	
-	private Mail mail;
-	
 	private List<Form> forms;
 	
 	private Redirects redirects;
@@ -53,6 +51,8 @@ public class FormsConfig {
 		private String to;
 		private String subject;
 		private Map<String, Object> data;
+		
+		private Mail mail = new Mail();
 	}
 	
 	@Data
@@ -63,14 +63,7 @@ public class FormsConfig {
 	
 	@Data
 	public static class Mail {
-		private Smtp smtp;
-	}
-	
-	@Data
-	public static class Smtp {
-		private String hostname;
-		private int port;
-		private String username;
-		private String password;
+		private String account = "default";
+		
 	}
 }

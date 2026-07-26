@@ -42,5 +42,8 @@ public class FormConfigTest {
 		
 		Assertions.assertThat(FORMSCONFIG.findForm("contact")).isPresent();
 		Assertions.assertThat(FORMSCONFIG.findForm("test-form")).isPresent();
+		
+		Assertions.assertThat(FORMSCONFIG.findForm("contact").get().getMail().getAccount()).isEqualTo("default");
+		Assertions.assertThat(FORMSCONFIG.findForm("test-form").get().getMail().getAccount()).isEqualTo("other");
 	}
 }
