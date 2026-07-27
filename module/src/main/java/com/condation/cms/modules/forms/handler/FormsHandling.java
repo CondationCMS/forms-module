@@ -165,7 +165,9 @@ public class FormsHandling {
 	public void handleForm(final FormsConfig.Form form, final Function<String, String> parameters) throws FormHandlingException {
 		validateSpam(form, parameters);
 		validateFields(form, parameters);
-		validateCaptcha(form, parameters.apply("key"), parameters.apply("code"));
+		if (form.getCaptcha().isEnabled()) {
+			validateCaptcha(form, parameters.apply("key"), parameters.apply("code"));
+		}
 
 		try {
 			var data = hookData(form, parameters);

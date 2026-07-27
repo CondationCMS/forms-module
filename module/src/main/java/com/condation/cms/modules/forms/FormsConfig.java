@@ -134,6 +134,7 @@ public class FormsConfig {
 		private Mail mail = new Mail();
 		private Spam spam = new Spam();
 		private RateLimit rateLimit = new RateLimit();
+		private Captcha captcha = new Captcha();
 
 		public void setFields(final Map<String, Field> configuredFields) {
 			this.fields = configuredFields == null
@@ -212,5 +213,10 @@ public class FormsConfig {
 	public static class Csrf {
 		private boolean enabled = true;
 		private Set<String> allowedOrigins = Collections.emptySet();
+	}
+
+	@Data
+	public static class Captcha {
+		private boolean enabled = true;
 	}
 }

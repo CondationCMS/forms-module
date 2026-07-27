@@ -106,6 +106,16 @@ class FormsHandlingTest {
 				.isEqualTo("SPAM_REJECTED");
 	}
 
+	@Test
+	void skipsCaptchaValidationWhenDisabled() throws Exception {
+		form.getCaptcha().setEnabled(false);
+		var values = validValues();
+		values.remove("key");
+		values.remove("code");
+
+		handling.handleForm(form, values::get);
+	}
+
 	private Map<String, String> validValues() {
 		var values = new LinkedHashMap<String, String>();
 		values.put("email", "visitor@example.com");

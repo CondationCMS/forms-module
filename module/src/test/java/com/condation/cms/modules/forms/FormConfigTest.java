@@ -51,4 +51,24 @@ public class FormConfigTest {
 		Assertions.assertThat(FORMSCONFIG.findForm("contact").get().getFields().get("message").getMinLength()).isEqualTo(10);
 		Assertions.assertThat(FORMSCONFIG.findForm("test-form").get().getMail().getAccount()).isEqualTo("other");
 	}
+
+	@Test
+	void captcha_defaults_to_enabled_and_can_be_disabled() throws Exception {
+		var yaml = """
+				forms:
+				  - name: with-default
+				    fields:
+				      message: {}
+				  - name: without-captcha
+				    captcha:
+				      enabled: false
+				    fields:
+				      message: {}
+				""";
+		var config = new org.yaml.snakeyaml.Yaml().loadAs(yaml, FormsConfig.class);
+		config.validate();
+
+		Assertions.assertThat(config.findForm("with-default").get().getCaptcha().isEnabled()).isTrue();
+		Assertions.assertThat(config.findForm("without-captcha").get().getCaptcha().isEnabled()).isFalse();
+	}
 }
