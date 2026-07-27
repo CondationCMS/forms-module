@@ -36,10 +36,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  * @author thorstenmarx
  */
 @UsePlaywright
-public class E2ETest {
+public class E2EIT {
 
 	@RegisterExtension
-	static CMSServerExtension serverExtensions = new CMSServerExtension("test-server");
+	static CMSServerExtension serverExtensions = new CMSServerExtension("../test-server");
 	
 	@Test
     void server_is_started() throws Exception {
@@ -49,18 +49,6 @@ public class E2ETest {
 	@Test
     void start_page(Page page) {
         page.navigate("http://localhost:2020");
-        Assertions.assertThat(page.locator("title").innerText()).isEqualTo("video-module test page");
-    }
-	
-	@Test
-    void contains_header(Page page) {
-        page.navigate("http://localhost:2020");
-		/**
-		 * <script src="#contextpath#/module/video-module/video.js"></script>
-         <link href="#contextpath#/module/video-module/video.css" rel="stylesheet"/>
-		 */
-		Assertions.assertThat(page.locator("head").innerHTML())
-				.contains("<script src=\"/module/video-module/video.js\"></script>")
-				.contains("<link href=\"/module/video-module/video.css\" rel=\"stylesheet\"/>");
+        Assertions.assertThat(page.locator("title").innerText()).isEqualTo("forms test site");
     }
 }

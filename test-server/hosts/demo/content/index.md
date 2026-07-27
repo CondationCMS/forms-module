@@ -1,11 +1,7 @@
 ---
-title: video-module test page
+title: forms test site
 template: start.html
-search:
-  index: false
 published: true
+status: published
 ---
 
-# Vimeo Shortcode
-
-[[video type="vimeo" id="170338499" title="Everybody loves little cats" /]]

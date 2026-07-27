@@ -12,6 +12,7 @@ demo/server.yaml
 .vscode/settings.json
 test-server/logs
 test-server/cms.pid
+test-server/modules
 test-server/hosts/demo/modules_data/
 test-server/hosts/demo/temp/
 test-server/hosts/demo/data/
