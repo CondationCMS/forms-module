@@ -1,0 +1,9 @@
+id = "demo-site"
+hostname = [ "localhost", "127.0.0.1" ]
+baseurl = "http://localhost:2020"
+locale = "en_US"
+context_path = "/"
+
+# modules to load for this site
+[modules]
+#active = ["videos-module"]         # list of active modules for this sites

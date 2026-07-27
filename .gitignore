@@ -10,3 +10,9 @@ demo/log4j2.xml
 demo/README.md
 demo/server.yaml
 .vscode/settings.json
+test-server/logs
+test-server/cms.pid
+test-server/hosts/demo/modules_data/
+test-server/hosts/demo/temp/
+test-server/hosts/demo/data/
+.DS_Store

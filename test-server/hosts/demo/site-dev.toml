@@ -1,0 +1,7 @@
+# site configuration for dev environment
+
+hostname = [ "localhost5" ]           # hostnames for this site, used for request matching
+
+[api]
+enabled = true
+whitelist = ["meta.*", "title"]
