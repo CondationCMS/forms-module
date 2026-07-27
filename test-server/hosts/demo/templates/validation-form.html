@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>{{ node.meta.title }}</title>
+	</head>
+	<body>
+		<main>
+			<h1>Validation form</h1>
+			<form id="validation-form" method="post" action="/module/forms-module/form/submit">
+				<input type="hidden" name="form" value="validation" />
+
+				<label for="validation-email">Email</label>
+				<input id="validation-email" name="email" type="text" />
+
+				<label for="validation-message">Message</label>
+				<textarea id="validation-message" name="message"></textarea>
+
+				<button id="validation-submit" type="submit">Validate</button>
+			</form>
+		</main>
+	</body>
+</html>

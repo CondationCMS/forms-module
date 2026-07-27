@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>{{ node.meta.title }}</title>
+	</head>
+	<body>
+		<main>
+			<h1>Security form</h1>
+			<form id="security-form" method="post" action="/module/forms-module/form/submit/ajax">
+				<input type="hidden" name="form" value="security" />
+
+				<label for="security-message">Message</label>
+				<textarea id="security-message" name="message"></textarea>
+
+				<div aria-hidden="true" hidden>
+					<label for="security-website">Website</label>
+					<input id="security-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+				</div>
+
+				<button id="security-submit" type="submit">Submit</button>
+			</form>
+		</main>
+	</body>
+</html>

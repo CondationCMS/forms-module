@@ -1,0 +1,57 @@
+forms:
+  - name: mail
+    to: recipient@example.test
+    subject: Forms E2E mail
+    fields:
+      email:
+        type: email
+        required: true
+      message:
+        required: true
+        minLength: 5
+        maxLength: 500
+    mail:
+      account: default
+      from: Forms E2E test
+    captcha:
+      enabled: false
+    redirects:
+      success: /forms/mail-success
+      error: /forms/mail-error
+
+  - name: validation
+    fields:
+      email:
+        type: email
+        required: true
+      message:
+        required: true
+        minLength: 10
+    captcha:
+      enabled: false
+    redirects:
+      success: /forms/validation-success
+      error: /forms/validation-error
+
+  - name: security
+    fields:
+      message:
+        required: true
+        minLength: 5
+    captcha:
+      enabled: false
+    spam:
+      honeypot:
+        enabled: true
+        field: website
+    rateLimit:
+      enabled: true
+      requests: 2
+      periodSeconds: 60
+    redirects:
+      success: /forms/security-success
+      error: /forms/security-error
+
+redirects:
+  success: /forms/success
+  error: /forms/error

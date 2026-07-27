@@ -6,4 +6,4 @@ context_path = "/"
 
 # modules to load for this site
 [modules]
-#active = ["videos-module"]         # list of active modules for this sites
+active = ["forms-module"]         # list of active modules for this sites
