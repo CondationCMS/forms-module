@@ -1,9 +1,3 @@
-mail:
-  smtp:
-    hostname: 127.0.0.1
-    port: 3025
-    username: test@example.test
-    password: password
 forms:
   - name: contact
     to: contact@example.com
@@ -17,27 +11,15 @@ forms:
         minLength: 10
         maxLength: 5000
     mail:
-      account: default
       from: forms@example.com
-    spam:
-      honeypot:
-        enabled: true
-        field: website
     redirects:
       success: /forms/contact/success
   - name: test-form
     fields:
-      from:
-        type: email
-        required: true
-      message:
-        required: true
-        minLength: 3
-    spam:
-      honeypot:
-        enabled: true
-        field: website
+      message: {}
     redirects:
       success: /forms/contact/success
+    mail: 
+      account: other
 redirects:
   error: /forms/error

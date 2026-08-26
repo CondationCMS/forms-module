@@ -1,0 +1,7 @@
+accounts:
+  default:
+    fromMail: "test@example.test"
+    host: "127.0.0.1"
+    port: "3025"
+    username: "test@example.test"
+    password: "password"

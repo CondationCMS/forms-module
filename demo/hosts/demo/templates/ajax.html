@@ -17,11 +17,12 @@
 		<h3>Test Formular</h3>
 		<form class="row g-3" method="post" 
 			action="/module/forms-module/form/submit/ajax" 
-			enctype="multipart/form-data"
+			enctype="application/x-www-form-urlencoded"
 			onsubmit="return false;"
 			id="ajaxForm"
 			>
 			<input type="hidden" name="form" value="test-form" >
+			<input class="visually-hidden" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
 			<div class="col-md-12">
 				<label for="inputEmail4" class="form-label">Your mail</label>
 				<input type="email" name="from" class="form-control" id="inputEmail4" />
@@ -31,7 +32,7 @@
 				<textarea type="text" class="form-control" name="message" id="inputMessage" ></textarea>
 			</div>
 			<div class="col-3">
-				<img id="captchaImg" th:src="@{~/module/forms-module/captcha/generate(width=200,height=50,key=${captchaKey})}" />
+				<img id="captchaImg" th:src="@{~/module/forms-module/captcha/generate(width=200,height=50,key=${captchaKey},form='test-form')}" />
 				<input type="hidden" id="captchaKey" name="key" th:value="${captchaKey}" >
 				<span class="reload" id="reloadCaptcha">reload</span>
 			</div>

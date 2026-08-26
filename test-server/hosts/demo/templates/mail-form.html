@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>{{ node.meta.title }}</title>
+	</head>
+	<body>
+		<main>
+			<h1>Mail form</h1>
+			<form id="mail-form" method="post" action="/module/forms-module/form/submit">
+				<input type="hidden" name="form" value="mail" />
+
+				<label for="mail-email">Email</label>
+				<input id="mail-email" name="email" type="email" />
+
+				<label for="mail-message">Message</label>
+				<textarea id="mail-message" name="message"></textarea>
+
+				<button id="mail-submit" type="submit">Send</button>
+			</form>
+		</main>
+	</body>
+</html>
